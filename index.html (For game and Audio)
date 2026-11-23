@@ -1,0 +1,3190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>A Dark Room — Forest Edition (By: EGvillian_yt)</title>
+  <style>
+    /* ==========================================================================
+       A DARK ROOM + INFINITE FOREST SOUNDSCAPE - THEME & LAYOUT TOKENS
+       ========================================================================== */
+    :root {
+      --bg-color: #050706;
+      --text-color: #dddddd;
+      --muted-text: #888888;
+      --disabled-text: #525252;
+      --border-color: #666666;
+      --disabled-border: #333333;
+      --cooldown-fill: rgba(255, 255, 255, 0.22);
+      --hover-bg: rgba(255, 255, 255, 0.08);
+      --modal-bg: #0b0e0c;
+      --modal-backdrop: rgba(0, 0, 0, 0.80);
+      --tooltip-bg: #121614;
+      --accent-forest: #68b891;
+      --font-main: "Times New Roman", Times, Georgia, serif;
+      --font-mono: "Courier New", Courier, monospace;
+    }
+
+    body.lights-on {
+      --bg-color: #f8f9f8;
+      --text-color: #181a19;
+      --muted-text: #626865;
+      --disabled-text: #a5aba8;
+      --border-color: #333835;
+      --disabled-border: #cccccc;
+      --cooldown-fill: rgba(0, 0, 0, 0.13);
+      --hover-bg: rgba(0, 0, 0, 0.05);
+      --modal-bg: #ffffff;
+      --modal-backdrop: rgba(255, 255, 255, 0.80);
+      --tooltip-bg: #f1f4f2;
+      --accent-forest: #2c7a56;
+    }
+
+    * {
+      box-sizing: border-box;
+      user-select: none;
+    }
+
+    html, body {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      min-height: 100%;
+      background-color: var(--bg-color);
+      color: var(--text-color);
+      font-family: var(--font-main);
+      font-size: 16px;
+      line-height: 1.45;
+      overflow-x: hidden;
+      transition: background-color 0.35s ease, color 0.35s ease;
+    }
+
+    /* ==========================================================================
+       MAIN THREE-COLUMN CONTAINER
+       ========================================================================== */
+    #wrapper {
+      max-width: 1140px;
+      min-height: 100vh;
+      margin: 0 auto;
+      padding: 34px 24px 78px 24px;
+      display: grid;
+      grid-template-columns: 235px 1fr 250px;
+      gap: 28px;
+      position: relative;
+    }
+
+    @media (max-width: 920px) {
+      #wrapper {
+        grid-template-columns: 1fr;
+        padding: 20px 16px 96px 16px;
+        gap: 20px;
+      }
+      #notifications-wrapper {
+        height: 155px !important;
+        max-height: 155px !important;
+      }
+    }
+
+    /* ==========================================================================
+       LEFT PANEL: EVENT LOG / NOTIFICATIONS
+       ========================================================================== */
+    #notifications-wrapper {
+      position: relative;
+      height: calc(100vh - 130px);
+      max-height: 640px;
+      overflow: hidden;
+      padding-right: 8px;
+    }
+
+    #notifications {
+      display: flex;
+      flex-direction: column;
+      gap: 13px;
+    }
+
+    .notification {
+      font-size: 15px;
+      line-height: 1.42;
+      color: var(--text-color);
+      opacity: 0;
+      transform: translateY(-4px);
+      animation: fadeInLog 0.4s forwards;
+    }
+
+    @keyframes fadeInLog {
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    #notify-gradient {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 135px;
+      background: linear-gradient(to top, var(--bg-color) 12%, transparent 100%);
+      pointer-events: none;
+      transition: background 0.35s ease;
+    }
+
+    /* ==========================================================================
+       CENTER PANEL: TABS & MAIN INTERACTION AREA
+       ========================================================================== */
+    #main-panel {
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+    }
+
+    #header-tabs {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 24px;
+      font-size: 18px;
+    }
+
+    .tab-item {
+      cursor: pointer;
+      color: var(--muted-text);
+      padding-bottom: 2px;
+      border-bottom: 1px solid transparent;
+      transition: color 0.2s, border-color 0.2s;
+    }
+
+    .tab-item:hover {
+      color: var(--text-color);
+    }
+
+    .tab-item.active {
+      color: var(--text-color);
+      border-bottom: 1px solid var(--text-color);
+    }
+
+    .tab-item.hidden, .tab-separator.hidden {
+      display: none;
+    }
+
+    .tab-separator {
+      color: var(--disabled-text);
+      pointer-events: none;
+    }
+
+    .tab-content {
+      display: none;
+    }
+
+    .tab-content.active {
+      display: block;
+    }
+
+    /* ==========================================================================
+       ADR BUTTONS WITH COOLDOWN PROGRESS & HOVER TOOLTIPS
+       ========================================================================== */
+    .adr-btn {
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 122px;
+      padding: 6px 14px;
+      border: 1px solid var(--border-color);
+      background: transparent;
+      color: var(--text-color);
+      font-family: var(--font-main);
+      font-size: 15px;
+      cursor: pointer;
+      text-align: center;
+      margin-bottom: 9px;
+      transition: border-color 0.2s, color 0.2s, background-color 0.15s;
+      overflow: visible;
+    }
+
+    .adr-btn:hover:not(.disabled):not(.on-cooldown) {
+      background-color: var(--hover-bg);
+    }
+
+    .adr-btn.disabled {
+      border-color: var(--disabled-border);
+      color: var(--disabled-text);
+      cursor: default;
+    }
+
+    .adr-btn.on-cooldown {
+      cursor: default;
+    }
+
+    .adr-btn .cooldown-bar {
+      position: absolute;
+      top: 0;
+      left: 0;
+      bottom: 0;
+      width: 0%;
+      background-color: var(--cooldown-fill);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .adr-btn .btn-label {
+      position: relative;
+      z-index: 1;
+    }
+
+    /* Hover Tooltip Box */
+    .adr-tooltip {
+      display: none;
+      position: absolute;
+      top: calc(100% + 4px);
+      left: 0;
+      min-width: 122px;
+      background-color: var(--tooltip-bg);
+      border: 1px solid var(--border-color);
+      padding: 5px 8px;
+      font-size: 13px;
+      color: var(--text-color);
+      z-index: 60;
+      pointer-events: none;
+      white-space: nowrap;
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.45);
+    }
+
+    .adr-btn:hover .adr-tooltip.has-content,
+    .worker-row:hover .adr-tooltip.has-content {
+      display: block;
+    }
+
+    .tooltip-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 14px;
+    }
+
+    /* ==========================================================================
+       TAB 1: A FIRELIT ROOM (BUILD / CRAFT / BUY)
+       ========================================================================== */
+    .room-columns {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(135px, 1fr));
+      gap: 24px;
+      margin-top: 16px;
+    }
+
+    .section-label {
+      font-size: 15px;
+      margin-bottom: 10px;
+      color: var(--text-color);
+    }
+
+    .btn-stack {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+    }
+
+    /* ==========================================================================
+       TAB 2: A SILENT FOREST / A MODEST VILLAGE
+       ========================================================================== */
+    .village-columns {
+      display: grid;
+      grid-template-columns: 155px 1fr;
+      gap: 24px;
+      align-items: start;
+    }
+
+    @media (max-width: 540px) {
+      .village-columns {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .worker-list {
+      display: flex;
+      flex-direction: column;
+      gap: 7px;
+      max-width: 260px;
+    }
+
+    .worker-row {
+      position: relative;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 2px 4px;
+      font-size: 15px;
+    }
+
+    .worker-controls {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .arrow-stack {
+      display: inline-flex;
+      flex-direction: column;
+      line-height: 0.75;
+    }
+
+    .arrow-btn {
+      background: none;
+      border: none;
+      color: var(--text-color);
+      cursor: pointer;
+      font-size: 12px;
+      padding: 1px 4px;
+      font-family: var(--font-mono);
+    }
+
+    .arrow-btn:hover:not(:disabled) {
+      opacity: 0.75;
+    }
+
+    .arrow-btn:disabled {
+      color: var(--disabled-text);
+      cursor: default;
+    }
+
+    /* ==========================================================================
+       RIGHT PANEL: -VILLAGE- AND -STORES- BOXES
+       ========================================================================== */
+    #right-panel {
+      display: flex;
+      flex-direction: column;
+      gap: 22px;
+    }
+
+    .legend-box {
+      position: relative;
+      border: 1px solid var(--border-color);
+      padding: 14px 12px 10px 12px;
+      font-size: 15px;
+    }
+
+    .legend-title-left {
+      position: absolute;
+      top: -11px;
+      left: 8px;
+      background-color: var(--bg-color);
+      padding: 0 5px;
+      font-size: 14px;
+      transition: background-color 0.35s ease;
+    }
+
+    .legend-title-right {
+      position: absolute;
+      top: -11px;
+      right: 8px;
+      background-color: var(--bg-color);
+      padding: 0 5px;
+      font-size: 14px;
+      transition: background-color 0.35s ease;
+    }
+
+    .store-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1px 0;
+    }
+
+    /* ==========================================================================
+       TAB 3: A DUSTY PATH (PREPARATION & ASCII OVERWORLD MAP)
+       ========================================================================== */
+    .supplies-box {
+      position: relative;
+      border: 1px solid var(--border-color);
+      padding: 16px 14px 12px 14px;
+      max-width: 270px;
+      margin-bottom: 18px;
+    }
+
+    .supply-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+      font-size: 15px;
+    }
+
+    .supply-row:last-child {
+      margin-bottom: 0;
+    }
+
+    #world-view {
+      display: none;
+    }
+
+    #world-view.active {
+      display: block;
+    }
+
+    .pockets-box {
+      position: relative;
+      border: 1px solid var(--border-color);
+      padding: 14px 12px 10px 12px;
+      margin-bottom: 16px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      min-height: 48px;
+    }
+
+    .pocket-item {
+      border: 1px solid var(--border-color);
+      padding: 2px 8px;
+      font-size: 14px;
+    }
+
+    #map-container {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 6px 0;
+    }
+
+    #ascii-map {
+      font-family: var(--font-mono);
+      font-size: 15px;
+      line-height: 1.22;
+      letter-spacing: 3px;
+      white-space: pre;
+      text-align: center;
+      cursor: pointer;
+      padding: 6px;
+    }
+
+    @media (max-width: 540px) {
+      #ascii-map {
+        font-size: 12px;
+        letter-spacing: 2px;
+      }
+    }
+
+    .map-player {
+      font-weight: bold;
+      text-decoration: underline;
+    }
+
+    .map-landmark {
+      font-weight: bold;
+    }
+
+    .map-fog {
+      color: transparent;
+    }
+
+    #landmark-label {
+      margin-top: 8px;
+      font-size: 14px;
+      min-height: 22px;
+      color: var(--text-color);
+      border: 1px solid var(--border-color);
+      padding: 2px 10px;
+      display: inline-block;
+    }
+
+    #landmark-label.hidden {
+      visibility: hidden;
+    }
+
+    .dpad-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 42px);
+      grid-template-rows: repeat(2, 38px);
+      gap: 6px;
+      margin-top: 12px;
+      justify-content: center;
+    }
+
+    .dpad-btn {
+      border: 1px solid var(--border-color);
+      background: transparent;
+      color: var(--text-color);
+      font-family: var(--font-mono);
+      font-size: 15px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .dpad-btn:active, .dpad-btn:hover {
+      background: var(--hover-bg);
+    }
+
+    /* ==========================================================================
+       MODAL OVERLAYS (COMBAT, LANDMARK ENCOUNTERS, EXPORT/IMPORT)
+       ========================================================================== */
+    .modal-backdrop {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background-color: var(--modal-backdrop);
+      z-index: 200;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+    }
+
+    .modal-backdrop.open {
+      display: flex;
+    }
+
+    .modal-box {
+      position: relative;
+      background-color: var(--modal-bg);
+      border: 1px solid var(--border-color);
+      padding: 22px 24px;
+      width: 100%;
+      max-width: 440px;
+      box-shadow: 0 12px 38px rgba(0, 0, 0, 0.85);
+    }
+
+    .modal-title {
+      position: absolute;
+      top: -12px;
+      left: 12px;
+      background-color: var(--modal-bg);
+      padding: 0 6px;
+      font-weight: bold;
+      font-size: 16px;
+    }
+
+    .modal-desc {
+      margin: 4px 0 18px 0;
+      font-size: 15px;
+    }
+
+    .combat-arena {
+      display: flex;
+      justify-content: space-around;
+      align-items: center;
+      margin: 22px 0 24px 0;
+      text-align: center;
+      font-family: var(--font-mono);
+    }
+
+    .combatant {
+      position: relative;
+      min-width: 80px;
+    }
+
+    .combat-hp {
+      font-size: 14px;
+      margin-bottom: 4px;
+    }
+
+    .combat-glyph {
+      font-size: 18px;
+      font-weight: bold;
+    }
+
+    .damage-floater {
+      position: absolute;
+      top: -22px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 14px;
+      font-weight: bold;
+      animation: floatUp 0.9s forwards;
+      pointer-events: none;
+    }
+
+    @keyframes floatUp {
+      0% { opacity: 1; transform: translate(-50%, 0); }
+      100% { opacity: 0; transform: translate(-50%, -18px); }
+    }
+
+    .modal-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .loot-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px 16px;
+      margin-bottom: 16px;
+    }
+
+    .save-textarea {
+      width: 100%;
+      height: 150px;
+      background-color: var(--bg-color);
+      color: var(--text-color);
+      border: 1px solid var(--border-color);
+      font-family: var(--font-mono);
+      font-size: 12px;
+      padding: 8px;
+      resize: none;
+      margin-bottom: 14px;
+      user-select: text;
+    }
+
+    /* ==========================================================================
+       FOREST SOUNDSCAPE POPOVER DRAWER (SLEEK INTEGRATED MIXER)
+       ========================================================================== */
+    #forest-drawer {
+      display: none;
+      position: fixed;
+      bottom: 48px;
+      right: 24px;
+      width: 340px;
+      max-width: calc(100vw - 32px);
+      background-color: var(--modal-bg);
+      border: 1px solid var(--border-color);
+      padding: 18px 18px 16px 18px;
+      z-index: 150;
+      box-shadow: 0 14px 42px rgba(0, 0, 0, 0.72);
+      transition: background-color 0.35s ease, border-color 0.35s ease;
+    }
+
+    #forest-drawer.open {
+      display: block;
+      animation: drawerPop 0.2s ease-out;
+    }
+
+    @keyframes drawerPop {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .drawer-legend {
+      position: absolute;
+      top: -11px;
+      left: 10px;
+      background-color: var(--modal-bg);
+      padding: 0 6px;
+      font-size: 14px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: background-color 0.35s ease;
+    }
+
+    .forest-dot {
+      display: inline-block;
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background-color: var(--disabled-text);
+      transition: background-color 0.3s, box-shadow 0.3s;
+    }
+
+    .forest-dot.live {
+      background-color: var(--accent-forest);
+      box-shadow: 0 0 8px var(--accent-forest);
+    }
+
+    .drawer-header-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+      gap: 8px;
+    }
+
+    .drawer-whisper {
+      font-size: 12px;
+      font-style: italic;
+      color: var(--muted-text);
+      margin-bottom: 12px;
+      min-height: 18px;
+    }
+
+    .preset-strip {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-bottom: 14px;
+    }
+
+    .forest-preset-btn {
+      border: 1px solid var(--disabled-border);
+      background: transparent;
+      color: var(--muted-text);
+      font-family: var(--font-main);
+      font-size: 12px;
+      padding: 3px 8px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .forest-preset-btn:hover {
+      border-color: var(--border-color);
+      color: var(--text-color);
+    }
+
+    .forest-preset-btn.active {
+      border-color: var(--border-color);
+      color: var(--text-color);
+      background-color: var(--hover-bg);
+    }
+
+    .mixer-row {
+      margin-bottom: 10px;
+    }
+
+    .mixer-row:last-child {
+      margin-bottom: 0;
+    }
+
+    .mixer-label-line {
+      display: flex;
+      justify-content: space-between;
+      font-size: 13px;
+      margin-bottom: 3px;
+    }
+
+    .mixer-val {
+      font-family: var(--font-mono);
+      font-size: 12px;
+      color: var(--muted-text);
+    }
+
+    input[type="range"].adr-slider {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 100%;
+      height: 3px;
+      background: var(--disabled-border);
+      outline: none;
+      cursor: pointer;
+    }
+
+    input[type="range"].adr-slider::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 11px;
+      height: 11px;
+      background: var(--text-color);
+      border: 1px solid var(--bg-color);
+      cursor: pointer;
+    }
+
+    input[type="range"].adr-slider::-moz-range-thumb {
+      width: 11px;
+      height: 11px;
+      background: var(--text-color);
+      border: 1px solid var(--bg-color);
+      border-radius: 0;
+      cursor: pointer;
+    }
+
+    /* ==========================================================================
+       FOOTER UTILITY LINKS & STATUS
+       ========================================================================== */
+    #footer {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background-color: var(--bg-color);
+      padding: 11px 24px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-size: 14px;
+      z-index: 120;
+      transition: background-color 0.35s ease;
+    }
+
+    .footer-inner {
+      max-width: 1140px;
+      width: 100%;
+      display: flex;
+      justify-content: flex-end;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 15px;
+    }
+
+    .footer-link {
+      color: var(--muted-text);
+      text-decoration: underline;
+      cursor: pointer;
+      transition: color 0.2s;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .footer-link:hover, .footer-link.active-toggle {
+      color: var(--text-color);
+    }
+
+    #saved-toast {
+      position: fixed;
+      top: 16px;
+      right: 24px;
+      font-size: 14px;
+      color: var(--muted-text);
+      opacity: 0;
+      transition: opacity 0.3s ease;
+      pointer-events: none;
+      z-index: 300;
+    }
+
+    #saved-toast.visible {
+      opacity: 1;
+    }
+  </style>
+</head>
+<body>
+  <div id="saved-toast">saved.</div>
+
+  <div id="wrapper">
+    <!-- LEFT COLUMN: NARRATIVE LOG -->
+    <div id="notifications-wrapper">
+      <div id="notifications"></div>
+      <div id="notify-gradient"></div>
+    </div>
+
+    <!-- CENTER COLUMN: TABS & ACTIVE GAME VIEW -->
+    <div id="main-panel">
+      <div id="header-tabs">
+        <span class="tab-item active" data-tab="room" id="tab-room">A Firelit Room</span>
+        <span class="tab-separator hidden" id="sep-village">|</span>
+        <span class="tab-item hidden" data-tab="village" id="tab-village">A Silent Forest</span>
+        <span class="tab-separator hidden" id="sep-path">|</span>
+        <span class="tab-item hidden" data-tab="path" id="tab-path">A Dusty Path</span>
+      </div>
+
+      <!-- TAB 1: A FIRELIT ROOM -->
+      <div class="tab-content active" id="view-room">
+        <div class="btn-stack">
+          <button class="adr-btn" id="btn-stoke">
+            <span class="cooldown-bar"></span>
+            <span class="btn-label">light fire</span>
+            <div class="adr-tooltip has-content" id="tip-stoke">
+              <div class="tooltip-row"><span>wood</span><span>1</span></div>
+            </div>
+          </button>
+        </div>
+
+        <div class="room-columns" id="room-builder-area" style="display: none;">
+          <div>
+            <div class="section-label">build:</div>
+            <div class="btn-stack" id="build-buttons"></div>
+          </div>
+          <div id="craft-column" style="display: none;">
+            <div class="section-label">craft:</div>
+            <div class="btn-stack" id="craft-buttons"></div>
+          </div>
+          <div id="buy-column" style="display: none;">
+            <div class="section-label">buy:</div>
+            <div class="btn-stack" id="buy-buttons"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB 2: A SILENT FOREST / A MODEST VILLAGE -->
+      <div class="tab-content" id="view-village">
+        <div class="village-columns">
+          <div class="btn-stack">
+            <button class="adr-btn" id="btn-gather">
+              <span class="cooldown-bar"></span>
+              <span class="btn-label">gather wood</span>
+            </button>
+            <button class="adr-btn" id="btn-traps" style="display: none;">
+              <span class="cooldown-bar"></span>
+              <span class="btn-label">check traps</span>
+            </button>
+          </div>
+
+          <div class="worker-list" id="worker-list"></div>
+        </div>
+      </div>
+
+      <!-- TAB 3: A DUSTY PATH -->
+      <div class="tab-content" id="view-path">
+        <!-- Embark Setup View -->
+        <div id="embark-view">
+          <div class="supplies-box">
+            <div class="legend-title-left">-supplies-</div>
+            <div class="legend-title-right" id="rucksack-free">free 10/10</div>
+            <div id="supplies-rows"></div>
+          </div>
+          <button class="adr-btn" id="btn-embark">
+            <span class="btn-label">embark</span>
+          </button>
+        </div>
+
+        <!-- Active Overworld Map View -->
+        <div id="world-view">
+          <div class="pockets-box" id="pockets-box">
+            <div class="legend-title-left" id="pockets-hp">-pockets- hp: 10/10</div>
+            <div class="legend-title-right" id="pockets-free">free 0/10</div>
+            <div id="pockets-list" style="display:flex; flex-wrap:wrap; gap:8px;"></div>
+          </div>
+
+          <div id="map-container">
+            <div id="ascii-map" title="Use WASD, Arrow keys, or tap buttons below to travel"></div>
+            <div id="landmark-label" class="hidden">The Village</div>
+            <div class="dpad-grid">
+              <div></div>
+              <button class="dpad-btn" data-dir="0,-1" aria-label="North">W</button>
+              <div></div>
+              <button class="dpad-btn" data-dir="-1,0" aria-label="West">A</button>
+              <button class="dpad-btn" data-dir="0,1" aria-label="South">S</button>
+              <button class="dpad-btn" data-dir="1,0" aria-label="East">D</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT COLUMN: -VILLAGE- AND -STORES- -->
+    <div id="right-panel">
+      <div class="legend-box" id="village-box" style="display: none;">
+        <div class="legend-title-left">-village-</div>
+        <div class="legend-title-right" id="village-pop">pop 0/0</div>
+        <div id="village-buildings-list"></div>
+      </div>
+
+      <div class="legend-box" id="stores-box" style="display: none;">
+        <div class="legend-title-left">-stores-</div>
+        <div id="stores-list"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- INTEGRATED INFINITE FOREST SOUNDSCAPE DRAWER -->
+  <aside id="forest-drawer" aria-label="Infinite Forest Soundscape Mixer">
+    <div class="drawer-legend">
+      <span class="forest-dot" id="forest-dot"></span>
+      <span>-forest ambience (∞)-</span>
+    </div>
+
+    <div class="drawer-header-row">
+      <button type="button" class="adr-btn" id="btn-forest-play" style="margin-bottom: 0; min-width: 112px; padding: 4px 10px; font-size: 14px;">
+        <span class="btn-label" id="forest-play-label">pause forest</span>
+      </button>
+      <span id="forest-clock" style="font-family: var(--font-mono); font-size: 12px; color: var(--muted-text);">00:00:00</span>
+      <button type="button" class="adr-btn" id="btn-forest-close" style="margin-bottom: 0; min-width: 34px; padding: 4px 8px; font-size: 13px;" title="Close mixer">
+        <span class="btn-label">x</span>
+      </button>
+    </div>
+
+    <div class="drawer-whisper" id="forest-whisper">Click anywhere to awaken the daytime canopy...</div>
+
+    <div class="preset-strip" id="forest-presets">
+      <button type="button" class="forest-preset-btn active" data-preset="daytime">Daytime Woodland</button>
+      <button type="button" class="forest-preset-btn" data-preset="breezy">Breezy Canopy</button>
+      <button type="button" class="forest-preset-btn" data-preset="meadow">Quiet Meadow</button>
+      <button type="button" class="forest-preset-btn" data-preset="chorus">Morning Chorus</button>
+    </div>
+
+    <div class="mixer-row">
+      <div class="mixer-label-line">
+        <span>master forest</span>
+        <span class="mixer-val" id="val-f-master">75%</span>
+      </div>
+      <input type="range" min="0" max="100" value="75" class="adr-slider" id="slider-f-master" />
+    </div>
+
+    <div class="mixer-row">
+      <div class="mixer-label-line">
+        <span>wind &amp; rustling leaves</span>
+        <span class="mixer-val" id="val-f-wind">78%</span>
+      </div>
+      <input type="range" min="0" max="100" value="78" class="adr-slider" id="slider-f-wind" />
+    </div>
+
+    <div class="mixer-row">
+      <div class="mixer-label-line">
+        <span>songbirds &amp; chirps</span>
+        <span class="mixer-val" id="val-f-birds">75%</span>
+      </div>
+      <input type="range" min="0" max="100" value="75" class="adr-slider" id="slider-f-birds" />
+    </div>
+
+    <div class="mixer-row">
+      <div class="mixer-label-line">
+        <span>distant crows &amp; flutters</span>
+        <span class="mixer-val" id="val-f-crows">58%</span>
+      </div>
+      <input type="range" min="0" max="100" value="58" class="adr-slider" id="slider-f-crows" />
+    </div>
+
+    <div class="mixer-row">
+      <div class="mixer-label-line">
+        <span>deep forest air</span>
+        <span class="mixer-val" id="val-f-air">65%</span>
+      </div>
+      <input type="range" min="0" max="100" value="65" class="adr-slider" id="slider-f-air" />
+    </div>
+  </aside>
+
+  <!-- FOOTER UTILITY BAR -->
+  <div id="footer">
+    <div class="footer-inner">
+      <span class="footer-link" id="link-quickstart" title="Jump to an established village ready for exploration">quick start.</span>
+      <span class="footer-link" id="link-save">save.</span>
+      <span class="footer-link" id="link-restart">restart.</span>
+      <span class="footer-link" id="link-hyper">hyper.</span>
+      <span class="footer-link" id="link-lights">lights on.</span>
+      <span class="footer-link" id="link-sfx">sfx on.</span>
+      <span class="footer-link" id="link-forest-audio" title="Open infinite forest soundscape mixer">
+        <span class="forest-dot" id="footer-forest-dot"></span>
+        <span>forest audio.</span>
+      </span>
+    </div>
+  </div>
+
+  <!-- GENERIC EVENT / COMBAT / EXPORT-IMPORT MODAL -->
+  <div class="modal-backdrop" id="game-modal">
+    <div class="modal-box" id="modal-box">
+      <div class="modal-title" id="modal-title">Event</div>
+      <div id="modal-body"></div>
+    </div>
+  </div>
+
+  <script>
+    /* ==========================================================================
+       A DARK ROOM + INFINITE FOREST SOUNDSCAPE ENGINE
+       ========================================================================== */
+    (function () {
+      "use strict";
+
+      const $ = (id) => document.getElementById(id);
+
+      // ========================================================================
+      // 1. CRISP UI & COMBAT SOUND EFFECTS (WEB AUDIO API)
+      // ========================================================================
+      const SoundFX = {
+        enabled: true,
+        ctx: null,
+        ensureCtx() {
+          if (!this.ctx && (window.AudioContext || window.webkitAudioContext)) {
+            this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+          }
+          if (this.ctx && this.ctx.state === "suspended") {
+            this.ctx.resume();
+          }
+        },
+        playTone(freq, duration, type = "sine", vol = 0.04) {
+          if (!this.enabled) return;
+          try {
+            this.ensureCtx();
+            if (!this.ctx) return;
+            const osc = this.ctx.createOscillator();
+            const gain = this.ctx.createGain();
+            osc.type = type;
+            osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
+            gain.gain.setValueAtTime(vol, this.ctx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + duration);
+            osc.connect(gain);
+            gain.connect(this.ctx.destination);
+            osc.start();
+            osc.stop(this.ctx.currentTime + duration);
+          } catch (e) {}
+        },
+        click() { this.playTone(320, 0.04, "triangle", 0.035); },
+        stoke() { this.playTone(145, 0.2, "sawtooth", 0.04); },
+        hit() { this.playTone(92, 0.14, "square", 0.055); },
+        shoot() { this.playTone(65, 0.22, "sawtooth", 0.07); },
+        heal() { this.playTone(520, 0.2, "sine", 0.045); },
+        step() { this.playTone(180, 0.03, "sine", 0.02); }
+      };
+
+      // ========================================================================
+      // 2. INFINITE PROCEDURAL DAYTIME FOREST AMBIENCE ENGINE
+      // ========================================================================
+      const FOREST_PRESETS = {
+        daytime: { wind: 78, birds: 75, crows: 58, air: 65, birdFreq: 1.0, crowFreq: 1.0 },
+        breezy:  { wind: 95, birds: 45, crows: 42, air: 82, birdFreq: 0.65, crowFreq: 0.8 },
+        meadow:  { wind: 48, birds: 62, crows: 25, air: 55, birdFreq: 0.85, crowFreq: 0.45 },
+        chorus:  { wind: 56, birds: 98, crows: 68, air: 52, birdFreq: 1.55, crowFreq: 1.15 }
+      };
+
+      const ForestEngine = {
+        ctx: null,
+        masterGain: null,
+        reverbNode: null,
+        gains: { wind: null, birds: null, crows: null, air: null },
+        isPlaying: false,
+        userPaused: false,
+        activePreset: "daytime",
+        timers: [],
+        elapsedSeconds: 0,
+        clockInterval: null,
+
+        init() {
+          if (this.ctx) return;
+          const AudioCtx = window.AudioContext || window.webkitAudioContext;
+          if (!AudioCtx) return;
+          this.ctx = new AudioCtx();
+
+          this.masterGain = this.ctx.createGain();
+          this.masterGain.gain.value = ($("slider-f-master").value / 100) * 0.75;
+
+          const compressor = this.ctx.createDynamicsCompressor();
+          compressor.threshold.value = -16;
+          compressor.knee.value = 18;
+          compressor.ratio.value = 3;
+          compressor.attack.value = 0.02;
+          compressor.release.value = 0.25;
+
+          this.masterGain.connect(compressor);
+          compressor.connect(this.ctx.destination);
+
+          // Outdoor woodland reverb impulse
+          this.reverbNode = this.createWoodlandReverb(2.4, 2.8);
+          const revReturn = this.ctx.createGain();
+          revReturn.gain.value = 0.34;
+          this.reverbNode.connect(revReturn);
+          revReturn.connect(this.masterGain);
+
+          for (const key of ["wind", "birds", "crows", "air"]) {
+            const g = this.ctx.createGain();
+            g.gain.value = $("slider-f-" + key).value / 100;
+            g.connect(this.masterGain);
+            this.gains[key] = g;
+          }
+
+          this.setupContinuousWindAndAir();
+        },
+
+        createWoodlandReverb(duration, decay) {
+          const sr = this.ctx.sampleRate;
+          const len = Math.floor(sr * duration);
+          const impulse = this.ctx.createBuffer(2, len, sr);
+          for (let ch = 0; ch < 2; ch++) {
+            const data = impulse.getChannelData(ch);
+            for (let i = 0; i < len; i++) {
+              const env = Math.pow(1 - i / len, decay);
+              data[i] = (Math.random() * 2 - 1) * env * 0.6;
+            }
+          }
+          const conv = this.ctx.createConvolver();
+          conv.buffer = impulse;
+          return conv;
+        },
+
+        createPinkNoiseBuffer(seconds = 16) {
+          const len = this.ctx.sampleRate * seconds;
+          const buf = this.ctx.createBuffer(2, len, this.ctx.sampleRate);
+          for (let ch = 0; ch < 2; ch++) {
+            const out = buf.getChannelData(ch);
+            let b0 = 0, b1 = 0, b2 = 0, b3 = 0, b4 = 0, b5 = 0, b6 = 0;
+            for (let i = 0; i < len; i++) {
+              const w = Math.random() * 2 - 1;
+              b0 = 0.99886 * b0 + w * 0.0555179;
+              b1 = 0.99332 * b1 + w * 0.0750759;
+              b2 = 0.96900 * b2 + w * 0.1538520;
+              b3 = 0.86650 * b3 + w * 0.3104856;
+              b4 = 0.55000 * b4 + w * 0.5329522;
+              b5 = -0.7616 * b5 - w * 0.0168980;
+              out[i] = (b0 + b1 + b2 + b3 + b4 + b5 + b6 + w * 0.5362) * 0.04;
+              b6 = w * 0.115926;
+            }
+          }
+          return buf;
+        },
+
+        createBrownNoiseBuffer(seconds = 19) {
+          const len = this.ctx.sampleRate * seconds;
+          const buf = this.ctx.createBuffer(2, len, this.ctx.sampleRate);
+          for (let ch = 0; ch < 2; ch++) {
+            const out = buf.getChannelData(ch);
+            let lastOut = 0.0;
+            for (let i = 0; i < len; i++) {
+              const w = Math.random() * 2 - 1;
+              out[i] = (lastOut + 0.02 * w) / 1.02;
+              lastOut = out[i];
+              out[i] *= 0.28;
+            }
+          }
+          return buf;
+        },
+
+        setupContinuousWindAndAir() {
+          const pinkBuf = this.createPinkNoiseBuffer(16);
+          const brownBuf = this.createBrownNoiseBuffer(19);
+
+          // Upper leafy canopy rustle
+          const leafSrc = this.ctx.createBufferSource();
+          leafSrc.buffer = pinkBuf;
+          leafSrc.loop = true;
+
+          const leafFilter = this.ctx.createBiquadFilter();
+          leafFilter.type = "bandpass";
+          leafFilter.frequency.value = 920;
+          leafFilter.Q.value = 1.4;
+
+          const leafHighShelf = this.ctx.createBiquadFilter();
+          leafHighShelf.type = "highshelf";
+          leafHighShelf.frequency.value = 2800;
+          leafHighShelf.gain.value = -5;
+
+          const leafGain = this.ctx.createGain();
+          leafGain.gain.value = 0.34;
+
+          // Prime-ratio LFOs (11.3s and 17.8s) so wind swells never repeat identically
+          const lfoFreq = this.ctx.createOscillator();
+          lfoFreq.type = "sine";
+          lfoFreq.frequency.value = 0.088;
+          const lfoFreqDepth = this.ctx.createGain();
+          lfoFreqDepth.gain.value = 420;
+          lfoFreq.connect(lfoFreqDepth);
+          lfoFreqDepth.connect(leafFilter.frequency);
+
+          const lfoSwell = this.ctx.createOscillator();
+          lfoSwell.type = "sine";
+          lfoSwell.frequency.value = 0.056;
+          const lfoSwellDepth = this.ctx.createGain();
+          lfoSwellDepth.gain.value = 0.16;
+          lfoSwell.connect(lfoSwellDepth);
+          lfoSwellDepth.connect(leafGain.gain);
+
+          leafSrc.connect(leafFilter);
+          leafFilter.connect(leafHighShelf);
+          leafHighShelf.connect(leafGain);
+          leafGain.connect(this.gains.wind);
+
+          // Mid-canopy swaying breeze
+          const breezeSrc = this.ctx.createBufferSource();
+          breezeSrc.buffer = pinkBuf;
+          breezeSrc.loop = true;
+
+          const breezeFilter = this.ctx.createBiquadFilter();
+          breezeFilter.type = "lowpass";
+          breezeFilter.frequency.value = 420;
+          breezeFilter.Q.value = 0.8;
+
+          const breezeGain = this.ctx.createGain();
+          breezeGain.gain.value = 0.42;
+
+          const breezeLfo = this.ctx.createOscillator();
+          breezeLfo.type = "sine";
+          breezeLfo.frequency.value = 0.043; // ~23.2s cycle
+          const breezeLfoGain = this.ctx.createGain();
+          breezeLfoGain.gain.value = 210;
+          breezeLfo.connect(breezeLfoGain);
+          breezeLfoGain.connect(breezeFilter.frequency);
+
+          breezeSrc.connect(breezeFilter);
+          breezeFilter.connect(breezeGain);
+          breezeGain.connect(this.gains.wind);
+
+          // Deep forest floor air
+          const airSrc = this.ctx.createBufferSource();
+          airSrc.buffer = brownBuf;
+          airSrc.loop = true;
+
+          const airFilter = this.ctx.createBiquadFilter();
+          airFilter.type = "lowpass";
+          airFilter.frequency.value = 190;
+
+          const airGain = this.ctx.createGain();
+          airGain.gain.value = 0.55;
+
+          airSrc.connect(airFilter);
+          airFilter.connect(airGain);
+          airGain.connect(this.gains.air);
+
+          leafSrc.start();
+          breezeSrc.start();
+          airSrc.start();
+          lfoFreq.start();
+          lfoSwell.start();
+          breezeLfo.start();
+        },
+
+        triggerSongbird() {
+          if (!this.isPlaying || !this.ctx) return;
+          const now = this.ctx.currentTime;
+          const species = Math.floor(Math.random() * 4);
+          const pan = (Math.random() * 1.6) - 0.8;
+
+          const panner = this.ctx.createStereoPanner();
+          panner.pan.setValueAtTime(pan, now);
+          panner.connect(this.gains.birds);
+          panner.connect(this.reverbNode);
+
+          if (species === 0) {
+            const baseFreq = 2400 + Math.random() * 650;
+            const notes = [
+              { t: 0.00, dur: 0.13, f1: baseFreq, f2: baseFreq * 1.24 },
+              { t: 0.16, dur: 0.11, f1: baseFreq * 1.18, f2: baseFreq * 0.92 },
+              { t: 0.31, dur: 0.22, f1: baseFreq * 1.05, f2: baseFreq * 1.32 }
+            ];
+            notes.forEach((n) => this.playBirdNote(panner, now + n.t, n.dur, n.f1, n.f2, 0.12));
+            $("forest-whisper").textContent = "A songbird warbles softly from the sunlit branches...";
+          } else if (species === 1) {
+            const dur = 0.35 + Math.random() * 0.25;
+            const osc = this.ctx.createOscillator();
+            const vib = this.ctx.createOscillator();
+            const vibGain = this.ctx.createGain();
+            const env = this.ctx.createGain();
+
+            const centerFreq = 3200 + Math.random() * 900;
+            osc.type = "sine";
+            osc.frequency.setValueAtTime(centerFreq, now);
+            osc.frequency.exponentialRampToValueAtTime(centerFreq * 0.86, now + dur);
+
+            vib.type = "sine";
+            vib.frequency.value = 26 + Math.random() * 10;
+            vibGain.gain.value = 190;
+
+            vib.connect(vibGain);
+            vibGain.connect(osc.frequency);
+
+            env.gain.setValueAtTime(0.0001, now);
+            env.gain.linearRampToValueAtTime(0.09, now + 0.04);
+            env.gain.setValueAtTime(0.08, now + dur - 0.06);
+            env.gain.exponentialRampToValueAtTime(0.0001, now + dur);
+
+            osc.connect(env);
+            env.connect(panner);
+            osc.start(now);
+            vib.start(now);
+            osc.stop(now + dur + 0.02);
+            vib.stop(now + dur + 0.02);
+            $("forest-whisper").textContent = "Delicate trills echo across the upper canopy...";
+          } else if (species === 2) {
+            const fHigh = 3100 + Math.random() * 500;
+            this.playBirdNote(panner, now, 0.14, fHigh, fHigh * 0.98, 0.11);
+            this.playBirdNote(panner, now + 0.21, 0.24, fHigh * 0.82, fHigh * 0.79, 0.11);
+            $("forest-whisper").textContent = "Clear two-note bird calls drift through the trees...";
+          } else {
+            const count = 2 + Math.floor(Math.random() * 3);
+            const fBase = 2700 + Math.random() * 900;
+            for (let i = 0; i < count; i++) {
+              const offset = i * (0.14 + Math.random() * 0.08);
+              this.playBirdNote(panner, now + offset, 0.08, fBase, fBase * 1.16, 0.075);
+            }
+          }
+        },
+
+        playBirdNote(dest, startTime, dur, startFreq, endFreq, peakGain) {
+          const osc = this.ctx.createOscillator();
+          const env = this.ctx.createGain();
+          osc.type = "sine";
+          osc.frequency.setValueAtTime(startFreq, startTime);
+          osc.frequency.exponentialRampToValueAtTime(endFreq, startTime + dur);
+
+          env.gain.setValueAtTime(0.0001, startTime);
+          env.gain.linearRampToValueAtTime(peakGain, startTime + dur * 0.22);
+          env.gain.exponentialRampToValueAtTime(0.0001, startTime + dur);
+
+          osc.connect(env);
+          env.connect(dest);
+          osc.start(startTime);
+          osc.stop(startTime + dur + 0.02);
+        },
+
+        triggerDistantCrow() {
+          if (!this.isPlaying || !this.ctx) return;
+          const now = this.ctx.currentTime;
+          const cawCount = 2 + Math.floor(Math.random() * 2);
+          const pan = (Math.random() > 0.5 ? 1 : -1) * (0.45 + Math.random() * 0.45);
+
+          const panner = this.ctx.createStereoPanner();
+          panner.pan.setValueAtTime(pan, now);
+          panner.connect(this.gains.crows);
+          panner.connect(this.reverbNode);
+
+          for (let i = 0; i < cawCount; i++) {
+            const t0 = now + i * (0.42 + Math.random() * 0.12);
+            const dur = 0.28 + Math.random() * 0.08;
+
+            const osc = this.ctx.createOscillator();
+            osc.type = "sawtooth";
+            const basePitch = 390 + Math.random() * 45;
+            osc.frequency.setValueAtTime(basePitch * 0.92, t0);
+            osc.frequency.linearRampToValueAtTime(basePitch * 1.08, t0 + dur * 0.35);
+            osc.frequency.exponentialRampToValueAtTime(basePitch * 0.78, t0 + dur);
+
+            const rasp = this.ctx.createOscillator();
+            const raspGain = this.ctx.createGain();
+            rasp.frequency.value = 54;
+            raspGain.gain.value = 26;
+            rasp.connect(raspGain);
+            raspGain.connect(osc.frequency);
+
+            const formant1 = this.ctx.createBiquadFilter();
+            formant1.type = "bandpass";
+            formant1.frequency.value = 1150;
+            formant1.Q.value = 2.6;
+
+            const distLowpass = this.ctx.createBiquadFilter();
+            distLowpass.type = "lowpass";
+            distLowpass.frequency.value = 1850;
+
+            const env = this.ctx.createGain();
+            env.gain.setValueAtTime(0.0001, t0);
+            env.gain.linearRampToValueAtTime(0.11, t0 + 0.05);
+            env.gain.setValueAtTime(0.095, t0 + dur * 0.65);
+            env.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+
+            osc.connect(formant1);
+            formant1.connect(distLowpass);
+            distLowpass.connect(env);
+            env.connect(panner);
+
+            osc.start(t0);
+            rasp.start(t0);
+            osc.stop(t0 + dur + 0.03);
+            rasp.stop(t0 + dur + 0.03);
+          }
+
+          $("forest-whisper").textContent = "A distant crow calls across the clearing...";
+        },
+
+        triggerWingFlutter() {
+          if (!this.isPlaying || !this.ctx) return;
+          const now = this.ctx.currentTime;
+          const beats = 4 + Math.floor(Math.random() * 4);
+          const pan = (Math.random() * 1.4) - 0.7;
+
+          const panner = this.ctx.createStereoPanner();
+          panner.pan.setValueAtTime(pan, now);
+          panner.connect(this.gains.crows);
+
+          const bufLen = Math.floor(this.ctx.sampleRate * 0.08);
+          const buf = this.ctx.createBuffer(1, bufLen, this.ctx.sampleRate);
+          const data = buf.getChannelData(0);
+          for (let i = 0; i < bufLen; i++) {
+            data[i] = (Math.random() * 2 - 1) * Math.sin((i / bufLen) * Math.PI);
+          }
+
+          for (let i = 0; i < beats; i++) {
+            const t = now + i * 0.068;
+            const src = this.ctx.createBufferSource();
+            src.buffer = buf;
+
+            const filter = this.ctx.createBiquadFilter();
+            filter.type = "bandpass";
+            filter.frequency.value = 650 + i * 60;
+            filter.Q.value = 1.8;
+
+            const gain = this.ctx.createGain();
+            gain.gain.value = 0.08 * (1 - i / (beats + 2));
+
+            src.connect(filter);
+            filter.connect(gain);
+            gain.connect(panner);
+            src.start(t);
+          }
+        },
+
+        startSchedulers() {
+          this.stopSchedulers();
+
+          const scheduleBird = () => {
+            if (!this.isPlaying) return;
+            const mult = FOREST_PRESETS[this.activePreset]?.birdFreq || 1.0;
+            const nextDelay = ((2.4 + Math.random() * 4.8) / mult) * 1000;
+            const id = setTimeout(() => {
+              this.triggerSongbird();
+              scheduleBird();
+            }, nextDelay);
+            this.timers.push(id);
+          };
+
+          const scheduleCrow = () => {
+            if (!this.isPlaying) return;
+            const mult = FOREST_PRESETS[this.activePreset]?.crowFreq || 1.0;
+            const nextDelay = ((10.0 + Math.random() * 14.0) / mult) * 1000;
+            const id = setTimeout(() => {
+              this.triggerDistantCrow();
+              scheduleCrow();
+            }, nextDelay);
+            this.timers.push(id);
+          };
+
+          const scheduleFlutter = () => {
+            if (!this.isPlaying) return;
+            const nextDelay = (11.5 + Math.random() * 16.0) * 1000;
+            const id = setTimeout(() => {
+              this.triggerWingFlutter();
+              scheduleFlutter();
+            }, nextDelay);
+            this.timers.push(id);
+          };
+
+          this.timers.push(setTimeout(() => this.triggerSongbird(), 900));
+          scheduleBird();
+          scheduleCrow();
+          scheduleFlutter();
+        },
+
+        stopSchedulers() {
+          this.timers.forEach((id) => clearTimeout(id));
+          this.timers = [];
+        },
+
+        async start() {
+          this.init();
+          if (!this.ctx) return;
+          if (this.ctx.state === "suspended") {
+            await this.ctx.resume();
+          }
+          if (this.ctx.state !== "running") return;
+
+          if (!this.isPlaying) {
+            this.isPlaying = true;
+            this.userPaused = false;
+            this.startSchedulers();
+            clearInterval(this.clockInterval);
+            this.clockInterval = setInterval(() => {
+              this.elapsedSeconds++;
+              const h = String(Math.floor(this.elapsedSeconds / 3600)).padStart(2, "0");
+              const m = String(Math.floor((this.elapsedSeconds % 3600) / 60)).padStart(2, "0");
+              const s = String(this.elapsedSeconds % 60).padStart(2, "0");
+              $("forest-clock").textContent = `${h}:${m}:${s}`;
+            }, 1000);
+          }
+          this.updateUI();
+        },
+
+        pause() {
+          this.isPlaying = false;
+          this.userPaused = true;
+          this.stopSchedulers();
+          clearInterval(this.clockInterval);
+          if (this.ctx && this.ctx.state === "running") {
+            this.ctx.suspend();
+          }
+          $("forest-whisper").textContent = "Forest soundscape paused.";
+          this.updateUI();
+        },
+
+        updateUI() {
+          const active = this.isPlaying;
+          $("forest-dot").classList.toggle("live", active);
+          $("footer-forest-dot").classList.toggle("live", active);
+          $("forest-play-label").textContent = active ? "pause forest" : "play forest";
+          if (active && $("forest-whisper").textContent.includes("Click anywhere")) {
+            $("forest-whisper").textContent = "Gentle wind sways through the sunlit leaves...";
+          }
+        }
+      };
+
+      // Attempt immediate start & seamlessly unlock on first user interaction anywhere
+      window.addEventListener("load", () => {
+        ForestEngine.start().catch(() => {});
+      });
+
+      const unlockForestOnGesture = () => {
+        if (!ForestEngine.isPlaying && !ForestEngine.userPaused) {
+          ForestEngine.start().catch(() => {});
+        }
+      };
+      document.addEventListener("pointerdown", unlockForestOnGesture);
+      document.addEventListener("keydown", unlockForestOnGesture);
+
+      // Forest Drawer Controls
+      $("link-forest-audio").addEventListener("click", () => {
+        $("forest-drawer").classList.toggle("open");
+        $("link-forest-audio").classList.toggle("active-toggle", $("forest-drawer").classList.contains("open"));
+        SoundFX.click();
+      });
+
+      $("btn-forest-close").addEventListener("click", () => {
+        $("forest-drawer").classList.remove("open");
+        $("link-forest-audio").classList.remove("active-toggle");
+        SoundFX.click();
+      });
+
+      $("btn-forest-play").addEventListener("click", () => {
+        if (ForestEngine.isPlaying) {
+          ForestEngine.pause();
+        } else {
+          ForestEngine.start();
+        }
+      });
+
+      // Bind Forest Mixer Sliders
+      ["master", "wind", "birds", "crows", "air"].forEach((key) => {
+        const slider = $("slider-f-" + key);
+        const valEl = $("val-f-" + key);
+        slider.addEventListener("input", () => {
+          const v = parseInt(slider.value, 10);
+          valEl.textContent = `${v}%`;
+          if (!ForestEngine.ctx) return;
+          const now = ForestEngine.ctx.currentTime;
+          if (key === "master") {
+            ForestEngine.masterGain.gain.setTargetAtTime((v / 100) * 0.75, now, 0.06);
+          } else if (ForestEngine.gains[key]) {
+            ForestEngine.gains[key].gain.setTargetAtTime(v / 100, now, 0.06);
+          }
+        });
+      });
+
+      // Bind Forest Presets
+      document.querySelectorAll(".forest-preset-btn").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          const pKey = btn.dataset.preset;
+          const cfg = FOREST_PRESETS[pKey];
+          if (!cfg) return;
+          ForestEngine.activePreset = pKey;
+
+          document.querySelectorAll(".forest-preset-btn").forEach((b) => b.classList.remove("active"));
+          btn.classList.add("active");
+
+          ["wind", "birds", "crows", "air"].forEach((layer) => {
+            const slider = $("slider-f-" + layer);
+            slider.value = cfg[layer];
+            $("val-f-" + layer).textContent = `${cfg[layer]}%`;
+            if (ForestEngine.ctx && ForestEngine.gains[layer]) {
+              ForestEngine.gains[layer].gain.setTargetAtTime(cfg[layer] / 100, ForestEngine.ctx.currentTime, 0.35);
+            }
+          });
+
+          if (ForestEngine.isPlaying) {
+            ForestEngine.startSchedulers();
+          }
+          SoundFX.click();
+        });
+      });
+
+      // ========================================================================
+      // 3. A DARK ROOM — COMPLETE GAME DEFINITIONS & STATE
+      // ========================================================================
+      const BUILDINGS = [
+        { id: "trap", name: "trap", max: 10, cost: (n) => ({ wood: 10 + n * 10 }) },
+        { id: "cart", name: "cart", max: 1, cost: () => ({ wood: 30 }) },
+        { id: "hut", name: "hut", max: 20, cost: (n) => ({ wood: 100 + n * 50 }) },
+        { id: "lodge", name: "lodge", max: 1, cost: () => ({ wood: 200, fur: 10, meat: 5 }) },
+        { id: "trading post", name: "trading post", max: 1, cost: () => ({ wood: 400, fur: 100 }) },
+        { id: "tannery", name: "tannery", max: 1, cost: () => ({ wood: 500, fur: 50 }) },
+        { id: "smokehouse", name: "smokehouse", max: 1, cost: () => ({ wood: 600, meat: 50 }) },
+        { id: "workshop", name: "workshop", max: 1, cost: () => ({ wood: 800, leather: 100, scales: 10 }) },
+        { id: "steelworks", name: "steelworks", max: 1, cost: () => ({ wood: 1500, iron: 100, coal: 100 }) },
+        { id: "armoury", name: "armoury", max: 1, cost: () => ({ wood: 3000, steel: 100, sulphur: 50 }) }
+      ];
+
+      const CRAFTABLES = [
+        { id: "torch", name: "torch", cost: { wood: 1, cloth: 1 }, amount: 1, unique: false },
+        { id: "waterskin", name: "waterskin", cost: { leather: 50 }, amount: 1, unique: true, waterCap: 20 },
+        { id: "cask", name: "cask", cost: { leather: 100, iron: 20 }, amount: 1, unique: true, waterCap: 50, requiresItem: "waterskin" },
+        { id: "water tank", name: "water tank", cost: { iron: 100, steel: 50 }, amount: 1, unique: true, waterCap: 100, requiresItem: "cask" },
+        { id: "bone spear", name: "bone spear", cost: { wood: 100, teeth: 5 }, amount: 1, unique: true, weapon: "bone spear" },
+        { id: "rucksack", name: "rucksack", cost: { leather: 200 }, amount: 1, unique: true, bagCap: 25 },
+        { id: "wagon", name: "wagon", cost: { wood: 500, iron: 100 }, amount: 1, unique: true, bagCap: 50, requiresItem: "rucksack" },
+        { id: "convoy", name: "convoy", cost: { wood: 1000, iron: 200, steel: 100 }, amount: 1, unique: true, bagCap: 100, requiresItem: "wagon" },
+        { id: "l armour", name: "l armour", cost: { leather: 200, scales: 20 }, amount: 1, unique: true, armour: "l armour", maxHp: 15 },
+        { id: "i armour", name: "i armour", cost: { leather: 200, iron: 100 }, amount: 1, unique: true, armour: "i armour", maxHp: 25 },
+        { id: "s armour", name: "s armour", cost: { leather: 200, steel: 100 }, amount: 1, unique: true, armour: "s armour", maxHp: 45 },
+        { id: "iron sword", name: "iron sword", cost: { wood: 200, leather: 50, iron: 20 }, amount: 1, unique: true, weapon: "iron sword" },
+        { id: "steel sword", name: "steel sword", cost: { wood: 500, leather: 100, steel: 20 }, amount: 1, unique: true, weapon: "steel sword" },
+        { id: "rifle", name: "rifle", cost: { wood: 200, steel: 50, sulphur: 50 }, amount: 1, unique: true, weapon: "rifle" }
+      ];
+
+      const TRADE_GOODS = [
+        { id: "scales", name: "scales", cost: { fur: 150 }, amount: 1 },
+        { id: "teeth", name: "teeth", cost: { fur: 300 }, amount: 1 },
+        { id: "iron", name: "iron", cost: { fur: 150, scales: 5 }, amount: 1 },
+        { id: "coal", name: "coal", cost: { fur: 200, teeth: 5 }, amount: 1 },
+        { id: "steel", name: "steel", cost: { fur: 300, scales: 5, teeth: 5 }, amount: 1 },
+        { id: "bullets", name: "bullets", cost: { scales: 10 }, amount: 5 },
+        { id: "energy cell", name: "energy cell", cost: { scales: 10, teeth: 10 }, amount: 1 },
+        { id: "alien alloy", name: "alien alloy", cost: { fur: 1500, scales: 750, teeth: 300 }, amount: 1 },
+        { id: "compass", name: "compass", cost: { fur: 400, scales: 20, teeth: 10 }, amount: 1, unique: true }
+      ];
+
+      const STORE_ORDER = [
+        "wood", "fur", "meat", "scales", "teeth", "leather", "bait", "torch",
+        "cloth", "cured meat", "iron", "coal", "sulphur", "steel", "bullets",
+        "energy cell", "alien alloy", "compass",
+        "waterskin", "cask", "water tank", "rucksack", "wagon", "convoy",
+        "l armour", "i armour", "s armour", "bone spear", "iron sword", "steel sword", "rifle"
+      ];
+
+      const JOBS = [
+        { id: "gatherer", name: "gatherer", req: null, prod: { wood: 1 } },
+        { id: "hunter", name: "hunter", req: "lodge", prod: { fur: 0.5, meat: 0.5 } },
+        { id: "trapper", name: "trapper", req: null, prod: { meat: -1, bait: 1 } },
+        { id: "tanner", name: "tanner", req: "tannery", prod: { fur: -5, leather: 1 } },
+        { id: "charcutier", name: "charcutier", req: "smokehouse", prod: { meat: -5, wood: -5, "cured meat": 1 } },
+        { id: "iron miner", name: "iron miner", reqBuilding: "iron_mine", prod: { "cured meat": -1, iron: 1 } },
+        { id: "coal miner", name: "coal miner", reqBuilding: "coal_mine", prod: { "cured meat": -1, coal: 1 } },
+        { id: "sulphur miner", name: "sulphur miner", reqBuilding: "sulphur_mine", prod: { "cured meat": -1, sulphur: 1 } },
+        { id: "steelworker", name: "steelworker", req: "steelworks", prod: { iron: -1, coal: -1, steel: 1 } },
+        { id: "armourer", name: "armourer", req: "armoury", prod: { steel: -1, sulphur: -1, bullets: 1 } }
+      ];
+
+      const MAP_SIZE = 21;
+      const CENTER = 10;
+
+      function createDefaultState(midGame = false) {
+        const base = {
+          fireLit: midGame,
+          fireTemp: midGame ? 3 : 0,
+          builderAwake: midGame,
+          forestUnlocked: midGame,
+          pathUnlocked: midGame,
+          activeTab: "room",
+          lightsOn: false,
+          hyper: false,
+          minesUnlocked: midGame ? { iron_mine: true, coal_mine: true, sulphur_mine: false } : {},
+          stores: midGame
+            ? {
+                wood: 420,
+                fur: 550,
+                meat: 240,
+                scales: 45,
+                teeth: 55,
+                leather: 85,
+                bait: 18,
+                torch: 6,
+                cloth: 14,
+                "cured meat": 35,
+                iron: 30,
+                coal: 20,
+                steel: 10,
+                compass: 1,
+                waterskin: 1,
+                rucksack: 1,
+                "l armour": 1,
+                "bone spear": 1
+              }
+            : { wood: 5 },
+          buildings: midGame
+            ? {
+                trap: 8,
+                cart: 1,
+                hut: 5,
+                lodge: 1,
+                "trading post": 1,
+                tannery: 1,
+                smokehouse: 1,
+                workshop: 1
+              }
+            : {},
+          workers: midGame
+            ? {
+                gatherer: 6,
+                hunter: 6,
+                trapper: 2,
+                tanner: 2,
+                charcutier: 2,
+                "iron miner": 1,
+                "coal miner": 1,
+                "sulphur miner": 0,
+                steelworker: 0,
+                armourer: 0
+              }
+            : {
+                gatherer: 0, hunter: 0, trapper: 0, tanner: 0, charcutier: 0,
+                "iron miner": 0, "coal miner": 0, "sulphur miner": 0, steelworker: 0, armourer: 0
+              },
+          population: midGame ? 20 : 0,
+          expedition: {
+            active: false,
+            armour: midGame ? "l armour" : "none",
+            weapon: midGame ? "bone spear" : "fists",
+            waterCap: midGame ? 20 : 10,
+            bagCap: midGame ? 25 : 10,
+            supplies: { water: midGame ? 15 : 10, "cured meat": 6, torch: midGame ? 2 : 0, bullets: 0 },
+            pockets: {},
+            hp: midGame ? 15 : 10,
+            maxHp: midGame ? 15 : 10,
+            x: CENTER,
+            y: CENTER,
+            steps: 0,
+            waterCounter: 0,
+            foodCounter: 0,
+            clearedLandmarks: {}
+          },
+          worldMap: null,
+          revealed: null
+        };
+
+        initWorldMap(base);
+        return base;
+      }
+
+      function initWorldMap(st) {
+        const terrains = [".", ".", ",", ",", ";", "#"];
+        const grid = [];
+        const rev = [];
+        for (let y = 0; y < MAP_SIZE; y++) {
+          const row = [];
+          const rRow = [];
+          for (let x = 0; x < MAP_SIZE; x++) {
+            row.push(terrains[(x * 7 + y * 13 + (x ^ y)) % terrains.length]);
+            rRow.push(Math.abs(x - CENTER) <= 2 && Math.abs(y - CENTER) <= 2);
+          }
+          grid.push(row);
+          rev.push(rRow);
+        }
+        // Place iconic landmarks around the Village (V)
+        grid[CENTER][CENTER] = "V";
+        grid[CENTER - 2][CENTER - 1] = "C"; // A Damp Cave
+        grid[CENTER - 1][CENTER + 2] = "H"; // An Old House
+        grid[CENTER + 3][CENTER - 2] = "A"; // An Abandoned Town / Outpost
+        grid[CENTER + 2][CENTER + 3] = "I"; // Iron Mine
+        grid[CENTER - 4][CENTER + 3] = "B"; // A Deep Borehole
+        grid[CENTER + 5][CENTER + 1] = "W"; // A Sulphur Swamp / Mine
+        grid[CENTER - 6][CENTER - 5] = "F"; // A Forgotten Battlefield
+
+        st.worldMap = grid;
+        st.revealed = rev;
+      }
+
+      let state = createDefaultState(false);
+      let cooldowns = {};
+      let activeModal = null;
+      let combatState = null;
+
+      function notify(msg) {
+        const container = $("notifications");
+        const div = document.createElement("div");
+        div.className = "notification";
+        div.textContent = msg;
+        container.prepend(div);
+        while (container.children.length > 28) {
+          container.removeChild(container.lastChild);
+        }
+      }
+
+      function showToast(text = "saved.") {
+        const toast = $("saved-toast");
+        toast.textContent = text;
+        toast.classList.add("visible");
+        clearTimeout(toast._timer);
+        toast._timer = setTimeout(() => toast.classList.remove("visible"), 1800);
+      }
+
+      function getSpeedMult() {
+        return state.hyper ? 0.35 : 1.0;
+      }
+
+      function triggerCooldown(btnId, durationSec, onComplete) {
+        const btn = $(btnId);
+        if (!btn) return;
+        const durMs = durationSec * 1000 * getSpeedMult();
+        cooldowns[btnId] = performance.now() + durMs;
+        btn.classList.add("on-cooldown");
+        const bar = btn.querySelector(".cooldown-bar");
+        if (bar) {
+          bar.style.transition = "none";
+          bar.style.width = "100%";
+          void bar.offsetWidth;
+          bar.style.transition = `width ${durMs}ms linear`;
+          bar.style.width = "0%";
+        }
+        setTimeout(() => {
+          delete cooldowns[btnId];
+          if (btn) btn.classList.remove("on-cooldown");
+          if (onComplete) onComplete();
+          renderAll();
+        }, durMs);
+      }
+
+      function isOnCooldown(btnId) {
+        return Boolean(cooldowns[btnId] && performance.now() < cooldowns[btnId]);
+      }
+
+      function canAfford(costObj) {
+        for (const [res, amt] of Object.entries(costObj)) {
+          if ((state.stores[res] || 0) < amt) return false;
+        }
+        return true;
+      }
+
+      function spend(costObj) {
+        for (const [res, amt] of Object.entries(costObj)) {
+          state.stores[res] = Math.max(0, (state.stores[res] || 0) - amt);
+        }
+      }
+
+      function addStore(res, amt) {
+        if (state.stores[res] === undefined) state.stores[res] = 0;
+        state.stores[res] = Math.round((state.stores[res] + amt) * 100) / 100;
+        if (state.stores[res] < 0) state.stores[res] = 0;
+      }
+
+      function getMaxPop() {
+        return (state.buildings.hut || 0) * 4;
+      }
+
+      // ---------- TAB SWITCHING ----------
+      function switchTab(tabName) {
+        state.activeTab = tabName;
+        document.querySelectorAll(".tab-item").forEach((el) => {
+          el.classList.toggle("active", el.dataset.tab === tabName);
+        });
+        document.querySelectorAll(".tab-content").forEach((el) => {
+          el.classList.toggle("active", el.id === `view-${tabName}`);
+        });
+        SoundFX.click();
+        renderAll();
+      }
+
+      document.querySelectorAll(".tab-item").forEach((tab) => {
+        tab.addEventListener("click", () => switchTab(tab.dataset.tab));
+      });
+
+      // ---------- ROOM ACTIONS (STOKE, BUILD, CRAFT, BUY) ----------
+      $("btn-stoke").addEventListener("click", () => {
+        if (isOnCooldown("btn-stoke")) return;
+        if (!state.fireLit) {
+          if (!canAfford({ wood: 1 })) {
+            notify("not enough wood to start the fire.");
+            return;
+          }
+          spend({ wood: 1 });
+          state.fireLit = true;
+          state.fireTemp = 2;
+          SoundFX.stoke();
+          notify("the fire is burning.");
+          notify("a ragged stranger stumbles through the door and collapses in the corner.");
+          triggerCooldown("btn-stoke", 3, () => {
+            if (!state.builderAwake) {
+              state.builderAwake = true;
+              state.forestUnlocked = true;
+              notify("the stranger shivers by the fire. she says she can build things if she had wood.");
+              renderAll();
+            }
+          });
+          renderAll();
+          return;
+        }
+
+        if (!canAfford({ wood: 1 })) {
+          notify("the wood has run out.");
+          return;
+        }
+        spend({ wood: 1 });
+        SoundFX.stoke();
+        state.fireTemp = Math.min(4, state.fireTemp + 1);
+        const tempMsgs = [
+          "the room is freezing.",
+          "the fire is flickering.",
+          "the fire is burning.",
+          "the fire is roaring.",
+          "the room is hot."
+        ];
+        notify(tempMsgs[state.fireTemp]);
+        if (!state.builderAwake) {
+          state.builderAwake = true;
+          state.forestUnlocked = true;
+        }
+        triggerCooldown("btn-stoke", 3);
+        renderAll();
+      });
+
+      function buildStructure(bDef) {
+        const current = state.buildings[bDef.id] || 0;
+        if (current >= bDef.max) return;
+        const cost = bDef.cost(current);
+        if (!canAfford(cost)) return;
+        spend(cost);
+        SoundFX.click();
+        state.buildings[bDef.id] = current + 1;
+
+        const buildMsgs = {
+          trap: "more traps to catch more creatures.",
+          cart: "the rickety cart will carry more wood from the forest.",
+          hut: "builder puts up a hut, out in the forest. says word will get around.",
+          lodge: "the hunting lodge stands in the clearing.",
+          "trading post": "now the nomads have a place to set up shop, they might stick around a while.",
+          tannery: "tannery goes up quick, on the edge of the village.",
+          smokehouse: "should fix the meat, before it spoils.",
+          workshop: "builder says she could make finer things, if she had the tools.",
+          steelworks: "a cloud of black smoke rises above the village.",
+          armoury: "armoury is ready to forge munitions for the dusty path."
+        };
+        notify(buildMsgs[bDef.id] || `built a ${bDef.name}.`);
+        renderAll();
+      }
+
+      function craftItem(cDef) {
+        if (cDef.unique && (state.stores[cDef.id] || 0) >= 1) return;
+        if (!canAfford(cDef.cost)) return;
+        spend(cDef.cost);
+        SoundFX.click();
+        addStore(cDef.id, cDef.amount);
+
+        if (cDef.waterCap) {
+          state.expedition.waterCap = Math.max(state.expedition.waterCap, cDef.waterCap);
+          notify(`crafted a ${cDef.name}. carries ${cDef.waterCap} water into the wastes.`);
+        } else if (cDef.bagCap) {
+          state.expedition.bagCap = Math.max(state.expedition.bagCap, cDef.bagCap);
+          notify(`crafted a ${cDef.name}. expands carrying capacity to ${cDef.bagCap}.`);
+        } else if (cDef.armour) {
+          state.expedition.armour = cDef.armour;
+          state.expedition.maxHp = Math.max(state.expedition.maxHp, cDef.maxHp);
+          notify(`crafted ${cDef.name}. sturdy protection for the trail.`);
+        } else if (cDef.weapon) {
+          state.expedition.weapon = cDef.weapon;
+          notify(`crafted ${cDef.name}. ready for battle.`);
+        } else {
+          notify(`crafted a ${cDef.name}.`);
+        }
+        renderAll();
+      }
+
+      function buyGood(good) {
+        if (good.unique && (state.stores[good.id] || 0) >= 1) return;
+        if (!canAfford(good.cost)) return;
+        spend(good.cost);
+        SoundFX.click();
+        addStore(good.id, good.amount);
+        if (good.id === "compass") {
+          state.pathUnlocked = true;
+          notify("the compass points west. the dusty path beckons.");
+        } else {
+          notify(`bought ${good.name} from the trader.`);
+        }
+        renderAll();
+      }
+
+      // ---------- FOREST / VILLAGE ACTIONS ----------
+      $("btn-gather").addEventListener("click", () => {
+        if (isOnCooldown("btn-gather")) return;
+        SoundFX.click();
+        const gain = state.buildings.cart ? 50 : 10;
+        addStore("wood", gain);
+        notify("dry brush and dead branches litter the forest floor.");
+        triggerCooldown("btn-gather", 4);
+        renderAll();
+      });
+
+      $("btn-traps").addEventListener("click", () => {
+        if (isOnCooldown("btn-traps")) return;
+        const traps = state.buildings.trap || 0;
+        if (traps <= 0) return;
+        SoundFX.click();
+        const baitBonus = Math.min(traps, state.stores.bait || 0);
+        if (baitBonus > 0) spend({ bait: baitBonus });
+
+        const mult = traps + baitBonus;
+        addStore("fur", Math.max(1, Math.floor(mult * 1.5)));
+        addStore("meat", Math.max(1, Math.floor(mult * 1.2)));
+        if (Math.random() < 0.45) addStore("scales", Math.max(1, Math.floor(traps / 3)));
+        if (Math.random() < 0.45) addStore("teeth", Math.max(1, Math.floor(traps / 3)));
+        if (Math.random() < 0.25) addStore("cloth", 1);
+
+        notify("the traps contain bits of meat, scattered teeth, scraps of fur, tattered cloth and strange scales.");
+        triggerCooldown("btn-traps", 5);
+        renderAll();
+      });
+
+      function adjustWorker(jobId, delta) {
+        if (jobId === "gatherer") return;
+        const gatherers = state.workers.gatherer || 0;
+        const current = state.workers[jobId] || 0;
+        if (delta > 0 && gatherers > 0) {
+          state.workers.gatherer = gatherers - 1;
+          state.workers[jobId] = current + 1;
+          SoundFX.click();
+        } else if (delta < 0 && current > 0) {
+          state.workers[jobId] = current - 1;
+          state.workers.gatherer = gatherers + 1;
+          SoundFX.click();
+        }
+        renderAll();
+      }
+
+      // ---------- DUSTY PATH & EXPEDITION LOGIC ----------
+      const SUPPLY_WEIGHTS = {
+        "cured meat": 1,
+        torch: 1,
+        bullets: 0.2
+      };
+
+      function getRucksackWeight() {
+        const s = state.expedition.supplies;
+        let total = 0;
+        for (const [item, count] of Object.entries(s)) {
+          if (item === "water") continue;
+          total += count * (SUPPLY_WEIGHTS[item] || 1);
+        }
+        return Math.round(total * 10) / 10;
+      }
+
+      function adjustSupply(item, delta) {
+        const exp = state.expedition;
+        const s = exp.supplies;
+        const cur = s[item] || 0;
+        const bagCap = exp.bagCap || 10;
+        const weight = getRucksackWeight();
+
+        if (delta > 0) {
+          if (item === "water") {
+            if (cur >= (exp.waterCap || 10)) return;
+            s.water = cur + 1;
+            SoundFX.click();
+          } else {
+            const itemW = SUPPLY_WEIGHTS[item] || 1;
+            if (weight + itemW > bagCap + 0.001) return;
+            const available = Math.floor(state.stores[item] || 0);
+            if (cur >= available) return;
+            s[item] = cur + 1;
+            SoundFX.click();
+          }
+        } else if (delta < 0 && cur > 0) {
+          s[item] = cur - 1;
+          SoundFX.click();
+        }
+        renderAll();
+      }
+
+      $("btn-embark").addEventListener("click", () => {
+        const exp = state.expedition;
+        const packable = ["cured meat", "torch", "bullets"];
+        for (const item of packable) {
+          const avail = Math.floor(state.stores[item] || 0);
+          if ((exp.supplies[item] || 0) > avail) {
+            exp.supplies[item] = avail;
+          }
+          if ((exp.supplies[item] || 0) > 0) {
+            spend({ [item]: exp.supplies[item] });
+          }
+        }
+
+        exp.active = true;
+        exp.x = CENTER;
+        exp.y = CENTER;
+        exp.hp = exp.maxHp;
+        exp.steps = 0;
+        exp.waterCounter = 0;
+        exp.foodCounter = 0;
+        exp.pockets = {};
+        for (const [k, v] of Object.entries(exp.supplies)) {
+          if (v > 0) exp.pockets[k] = v;
+        }
+        SoundFX.step();
+        notify("the wind howls across the dusty path.");
+        renderAll();
+      });
+
+      function getPocketWeight() {
+        let total = 0;
+        for (const [item, count] of Object.entries(state.expedition.pockets)) {
+          if (item === "water") continue;
+          total += count * (SUPPLY_WEIGHTS[item] || 1);
+        }
+        return Math.round(total * 10) / 10;
+      }
+
+      function movePlayer(dx, dy) {
+        const exp = state.expedition;
+        if (!exp.active || activeModal) return;
+
+        const nx = exp.x + dx;
+        const ny = exp.y + dy;
+        if (nx < 0 || ny < 0 || nx >= MAP_SIZE || ny >= MAP_SIZE) return;
+
+        exp.x = nx;
+        exp.y = ny;
+        exp.steps += 1;
+        SoundFX.step();
+
+        // Reveal fog of war in 5x5 radius around player
+        for (let ry = ny - 2; ry <= ny + 2; ry++) {
+          for (let rx = nx - 2; rx <= nx + 2; rx++) {
+            if (ry >= 0 && rx >= 0 && ry < MAP_SIZE && rx < MAP_SIZE) {
+              state.revealed[ry][rx] = true;
+            }
+          }
+        }
+
+        // Consume water every 2 steps
+        exp.waterCounter++;
+        if (exp.waterCounter >= 2) {
+          exp.waterCounter = 0;
+          if ((exp.pockets.water || 0) > 0) {
+            exp.pockets.water--;
+          } else {
+            exp.hp -= 2;
+            notify("thirst burns your throat.");
+          }
+        }
+
+        // Consume cured meat every 3 steps
+        exp.foodCounter++;
+        if (exp.foodCounter >= 3) {
+          exp.foodCounter = 0;
+          if ((exp.pockets["cured meat"] || 0) > 0) {
+            exp.pockets["cured meat"]--;
+          } else {
+            exp.hp -= 2;
+            notify("starvation gnaws at your stomach.");
+          }
+        }
+
+        if (exp.hp <= 0) {
+          failExpedition();
+          return;
+        }
+
+        const tile = state.worldMap[ny][nx];
+        renderWorldMap();
+
+        if (tile === "V" && exp.steps > 0) {
+          returnToVillage();
+          return;
+        }
+
+        if (/[A-Z]/.test(tile) && tile !== "V") {
+          triggerLandmark(tile, nx, ny);
+          return;
+        }
+
+        if (Math.random() < 0.22) {
+          triggerRandomCombat();
+        }
+      }
+
+      function returnToVillage() {
+        const exp = state.expedition;
+        for (const [item, count] of Object.entries(exp.pockets)) {
+          if (item !== "water" && count > 0) {
+            addStore(item, count);
+          }
+        }
+        exp.active = false;
+        exp.pockets = {};
+        notify("returned safely to the village with gathered supplies.");
+        renderAll();
+      }
+
+      function failExpedition() {
+        const exp = state.expedition;
+        exp.active = false;
+        exp.pockets = {};
+        notify("the world fades to black. you wake back in the village, empty-handed.");
+        switchTab("room");
+      }
+
+      // ---------- LANDMARK & COMBAT MODALS ----------
+      function openModal(title, htmlContent) {
+        activeModal = true;
+        $("modal-title").textContent = title;
+        $("modal-body").innerHTML = htmlContent;
+        $("game-modal").classList.add("open");
+      }
+
+      function closeModal() {
+        activeModal = false;
+        combatState = null;
+        $("game-modal").classList.remove("open");
+        renderAll();
+      }
+
+      function triggerLandmark(tile, x, y) {
+        const key = `${x},${y}`;
+        if (tile === "A") {
+          state.expedition.pockets.water = state.expedition.waterCap || 10;
+          notify("an abandoned town. the old stone well still holds clean water.");
+          openModal("An Abandoned Town", `
+            <div class="modal-desc">a quiet stone well sits in the center of the ruin. water skins refilled to capacity.</div>
+            <div class="modal-actions">
+              <button class="adr-btn" id="lm-leave"><span class="btn-label">leave</span></button>
+            </div>
+          `);
+          $("lm-leave").onclick = closeModal;
+          return;
+        }
+
+        const landmarkInfo = {
+          C: {
+            title: "A Damp Cave",
+            desc: "the mouth of the cave is wide and dark.<br><br>can't see what's inside.",
+            enterText: "go inside",
+            loot: { fur: 5, scales: 4, teeth: 4, cloth: 2 }
+          },
+          H: {
+            title: "An Old House",
+            desc: "an overgrown house, half-collapsed into the earth.",
+            enterText: "search inside",
+            loot: { "cured meat": 4, cloth: 3, torch: 2 }
+          },
+          I: {
+            title: "An Iron Mine",
+            desc: "rusted tracks vanish into a dark tunnel. clearing it out could supply the village.",
+            enterText: "clear the mine",
+            unlockMine: "iron_mine",
+            loot: { iron: 8, coal: 4, scales: 3 }
+          },
+          B: {
+            title: "A Deep Borehole",
+            desc: "the earth here is split, exposing rich dark seams of coal.",
+            enterText: "descend shaft",
+            unlockMine: "coal_mine",
+            loot: { coal: 10, iron: 4, cloth: 2 }
+          },
+          W: {
+            title: "A Sulphur Swamp",
+            desc: "yellow crust coats the jagged rocks around bubbling pools.",
+            enterText: "scout the swamp",
+            unlockMine: "sulphur_mine",
+            loot: { sulphur: 10, teeth: 5, "cured meat": 2 }
+          },
+          F: {
+            title: "A Forgotten Battlefield",
+            desc: "shattered armour and strange metallic relics lie half-buried in the dust.",
+            enterText: "scavenge relics",
+            loot: { "alien alloy": 2, "energy cell": 3, steel: 6, bullets: 10 }
+          }
+        };
+
+        const info = landmarkInfo[tile] || landmarkInfo.C;
+        if (state.expedition.clearedLandmarks[key]) {
+          openModal(info.title, `
+            <div class="modal-desc">nothing remains here but dust and echoes.</div>
+            <div class="modal-actions">
+              <button class="adr-btn" id="lm-leave"><span class="btn-label">leave</span></button>
+            </div>
+          `);
+          $("lm-leave").onclick = closeModal;
+          return;
+        }
+
+        openModal(info.title, `
+          <div class="modal-desc">${info.desc}</div>
+          <div class="modal-actions">
+            <button class="adr-btn" id="lm-enter"><span class="btn-label">${info.enterText}</span></button>
+            <button class="adr-btn" id="lm-leave"><span class="btn-label">leave</span></button>
+          </div>
+        `);
+
+        $("lm-leave").onclick = closeModal;
+        $("lm-enter").onclick = () => {
+          state.expedition.clearedLandmarks[key] = true;
+          if (info.unlockMine) {
+            state.minesUnlocked[info.unlockMine] = true;
+            notify(`villagers can now be assigned to the ${info.unlockMine.replace("_", " ")}.`);
+          }
+          showLootModal(info.title, "scattered supplies lie in the shadows.", info.loot);
+        };
+      }
+
+      function triggerRandomCombat() {
+        const enemies = [
+          { name: "A Snarling Beast", desc: "a snarling beast leaps out of the underbrush", glyph: "R", hp: 5, dmg: 1, loot: { fur: 2, meat: 2, teeth: 1 } },
+          { name: "A Gaunt Man", desc: "a gaunt man approaches with wild eyes", glyph: "M", hp: 7, dmg: 2, loot: { cloth: 2, "cured meat": 2, teeth: 1 } },
+          { name: "A Huge Lizard", desc: "a scaled lizard hisses from the rocks", glyph: "L", hp: 9, dmg: 2, loot: { scales: 4, meat: 3 } },
+          { name: "A Feral Wanderer", desc: "a tattered figure lunges from behind a boulder", glyph: "W", hp: 11, dmg: 3, loot: { iron: 2, bullets: 5, "cured meat": 2 } }
+        ];
+        const enemy = enemies[Math.floor(Math.random() * enemies.length)];
+        notify(enemy.desc);
+
+        combatState = {
+          enemy: { ...enemy, maxHp: enemy.hp },
+          enemyTimer: null
+        };
+
+        renderCombatModal();
+
+        combatState.enemyTimer = setInterval(() => {
+          if (!combatState || combatState.enemy.hp <= 0) return;
+          const dmg = combatState.enemy.dmg;
+          state.expedition.hp = Math.max(0, state.expedition.hp - dmg);
+          SoundFX.hit();
+          spawnCombatFloater("player-combatant", `-${dmg}`);
+          updateCombatHP();
+          renderWorldMap();
+
+          if (state.expedition.hp <= 0) {
+            clearInterval(combatState.enemyTimer);
+            closeModal();
+            failExpedition();
+          }
+        }, Math.round(2200 * getSpeedMult()));
+      }
+
+      function getWeaponAttackConfig(weapon) {
+        if (weapon === "rifle") return { label: "shoot", dmg: 8, usesBullet: true };
+        if (weapon === "steel sword") return { label: "slash", dmg: 6, usesBullet: false };
+        if (weapon === "iron sword") return { label: "swing", dmg: 4, usesBullet: false };
+        if (weapon === "bone spear") return { label: "stab", dmg: 3, usesBullet: false };
+        return { label: "punch", dmg: 1, usesBullet: false };
+      }
+
+      function renderCombatModal() {
+        const exp = state.expedition;
+        const en = combatState.enemy;
+        const atk = getWeaponAttackConfig(exp.weapon);
+        const hasBullets = (exp.pockets.bullets || 0) > 0;
+
+        openModal(en.name, `
+          <div class="modal-desc">${en.desc}</div>
+          <div class="combat-arena">
+            <div class="combatant" id="player-combatant">
+              <div class="combat-hp" id="player-combat-hp">${exp.hp}/${exp.maxHp}</div>
+              <div class="combat-glyph">@</div>
+            </div>
+            <div class="combatant" id="enemy-combatant">
+              <div class="combat-hp" id="enemy-combat-hp">${en.hp}/${en.maxHp}</div>
+              <div class="combat-glyph">${en.glyph}</div>
+            </div>
+          </div>
+          <div class="modal-actions" style="flex-direction:column; align-items:flex-start;">
+            <button class="adr-btn" id="btn-attack">
+              <span class="cooldown-bar"></span>
+              <span class="btn-label">${atk.usesBullet && !hasBullets ? "punch" : atk.label}</span>
+            </button>
+            <button class="adr-btn" id="btn-eat-meat">
+              <span class="cooldown-bar"></span>
+              <span class="btn-label">eat meat</span>
+            </button>
+          </div>
+        `);
+
+        $("btn-attack").onclick = () => {
+          if (isOnCooldown("btn-attack") || !combatState) return;
+          let dmg = atk.dmg;
+          if (atk.usesBullet) {
+            if ((exp.pockets.bullets || 0) > 0) {
+              exp.pockets.bullets--;
+              SoundFX.shoot();
+            } else {
+              dmg = 1;
+              SoundFX.hit();
+            }
+          } else {
+            SoundFX.hit();
+          }
+
+          combatState.enemy.hp = Math.max(0, combatState.enemy.hp - dmg);
+          spawnCombatFloater("enemy-combatant", `-${dmg}`);
+          updateCombatHP();
+          renderWorldMap();
+
+          if (combatState.enemy.hp <= 0) {
+            clearInterval(combatState.enemyTimer);
+            const loot = { ...combatState.enemy.loot };
+            const title = combatState.enemy.name;
+            combatState = null;
+            showLootModal(title, `the ${title.toLowerCase().replace(/^a /, "")} is dead`, loot);
+            return;
+          }
+          triggerCooldown("btn-attack", 1.35);
+        };
+
+        $("btn-eat-meat").onclick = () => {
+          if (isOnCooldown("btn-eat-meat") || !combatState) return;
+          if ((exp.pockets["cured meat"] || 0) <= 0) return;
+          exp.pockets["cured meat"]--;
+          const heal = Math.min(8, exp.maxHp - exp.hp);
+          exp.hp += heal;
+          SoundFX.heal();
+          spawnCombatFloater("player-combatant", `+${heal}`);
+          updateCombatHP();
+          renderWorldMap();
+          triggerCooldown("btn-eat-meat", 1.9);
+        };
+      }
+
+      function updateCombatHP() {
+        const pEl = $("player-combat-hp");
+        const eEl = $("enemy-combat-hp");
+        if (pEl) pEl.textContent = `${state.expedition.hp}/${state.expedition.maxHp}`;
+        if (eEl && combatState) eEl.textContent = `${combatState.enemy.hp}/${combatState.enemy.maxHp}`;
+      }
+
+      function spawnCombatFloater(targetId, text) {
+        const host = $(targetId);
+        if (!host) return;
+        const span = document.createElement("span");
+        span.className = "damage-floater";
+        span.textContent = text;
+        host.appendChild(span);
+        setTimeout(() => span.remove(), 900);
+      }
+
+      function showLootModal(title, subtitle, lootObj) {
+        const bagCap = state.expedition.bagCap || 10;
+        const renderLoot = () => {
+          const entries = Object.entries(lootObj).filter(([, qty]) => qty > 0);
+          let gridHtml = `<div class="modal-desc">${subtitle}<br><br>take:</div><div class="loot-grid">`;
+          for (const [item, qty] of entries) {
+            gridHtml += `
+              <button class="adr-btn loot-take-one" data-item="${item}">
+                <span class="btn-label">${item} [${qty}]</span>
+              </button>
+              <button class="adr-btn loot-take-all-item" data-item="${item}">
+                <span class="btn-label">take all</span>
+              </button>
+            `;
+          }
+          gridHtml += `</div>
+            <div class="modal-actions" style="flex-direction:column; align-items:flex-start;">
+              ${entries.length > 0 ? `<button class="adr-btn" id="btn-take-everything"><span class="btn-label">take everything and leave</span></button>` : ""}
+              <button class="adr-btn" id="btn-loot-leave"><span class="btn-label">leave</span></button>
+            </div>
+          `;
+          openModal(title, gridHtml);
+
+          document.querySelectorAll(".loot-take-one").forEach((btn) => {
+            btn.onclick = () => {
+              const item = btn.dataset.item;
+              const itemW = SUPPLY_WEIGHTS[item] || 1;
+              if (lootObj[item] > 0 && getPocketWeight() + itemW <= bagCap + 0.001) {
+                lootObj[item]--;
+                state.expedition.pockets[item] = (state.expedition.pockets[item] || 0) + 1;
+                SoundFX.click();
+                renderWorldMap();
+                renderLoot();
+              }
+            };
+          });
+
+          document.querySelectorAll(".loot-take-all-item").forEach((btn) => {
+            btn.onclick = () => {
+              const item = btn.dataset.item;
+              const itemW = SUPPLY_WEIGHTS[item] || 1;
+              while (lootObj[item] > 0 && getPocketWeight() + itemW <= bagCap + 0.001) {
+                lootObj[item]--;
+                state.expedition.pockets[item] = (state.expedition.pockets[item] || 0) + 1;
+              }
+              SoundFX.click();
+              renderWorldMap();
+              renderLoot();
+            };
+          });
+
+          const takeAllBtn = $("btn-take-everything");
+          if (takeAllBtn) {
+            takeAllBtn.onclick = () => {
+              for (const [item] of Object.entries(lootObj)) {
+                const itemW = SUPPLY_WEIGHTS[item] || 1;
+                while (lootObj[item] > 0 && getPocketWeight() + itemW <= bagCap + 0.001) {
+                  lootObj[item]--;
+                  state.expedition.pockets[item] = (state.expedition.pockets[item] || 0) + 1;
+                }
+              }
+              SoundFX.click();
+              closeModal();
+            };
+          }
+
+          $("btn-loot-leave").onclick = closeModal;
+        };
+
+        renderLoot();
+      }
+
+      // ---------- RENDERING UI SECTIONS ----------
+      function renderTabs() {
+        const sepV = $("sep-village");
+        const tabV = $("tab-village");
+        const sepP = $("sep-path");
+        const tabP = $("tab-path");
+
+        if (state.forestUnlocked) {
+          sepV.classList.remove("hidden");
+          tabV.classList.remove("hidden");
+          tabV.textContent = (state.buildings.hut || 0) > 0 ? "A Modest Village" : "A Silent Forest";
+        } else {
+          sepV.classList.add("hidden");
+          tabV.classList.add("hidden");
+        }
+
+        if (state.pathUnlocked) {
+          sepP.classList.remove("hidden");
+          tabP.classList.remove("hidden");
+        } else {
+          sepP.classList.add("hidden");
+          tabP.classList.add("hidden");
+        }
+      }
+
+      function renderRoom() {
+        const stokeBtn = $("btn-stoke");
+        stokeBtn.querySelector(".btn-label").textContent = state.fireLit ? "stoke fire" : "light fire";
+
+        const builderArea = $("room-builder-area");
+        builderArea.style.display = state.builderAwake ? "grid" : "none";
+        if (!state.builderAwake) return;
+
+        // Build Column
+        const buildContainer = $("build-buttons");
+        buildContainer.innerHTML = "";
+        for (const bDef of BUILDINGS) {
+          const count = state.buildings[bDef.id] || 0;
+          if (count >= bDef.max && bDef.max === 1) continue;
+          const cost = bDef.cost(count);
+          const affordable = canAfford(cost);
+
+          const btn = document.createElement("button");
+          btn.className = "adr-btn" + (!affordable || count >= bDef.max ? " disabled" : "");
+          let tipHtml = "";
+          for (const [res, amt] of Object.entries(cost)) {
+            tipHtml += `<div class="tooltip-row"><span>${res}</span><span>${amt}</span></div>`;
+          }
+          btn.innerHTML = `
+            <span class="btn-label">${bDef.name}</span>
+            <div class="adr-tooltip ${tipHtml ? "has-content" : ""}">${tipHtml}</div>
+          `;
+          btn.onclick = () => buildStructure(bDef);
+          buildContainer.appendChild(btn);
+        }
+
+        // Craft Column (Workshop unlocked)
+        const craftCol = $("craft-column");
+        const craftContainer = $("craft-buttons");
+        if ((state.buildings.workshop || 0) > 0) {
+          craftCol.style.display = "block";
+          craftContainer.innerHTML = "";
+          for (const cDef of CRAFTABLES) {
+            if (cDef.unique && (state.stores[cDef.id] || 0) >= 1) continue;
+            if (cDef.requiresItem && !(state.stores[cDef.requiresItem] >= 1)) continue;
+            const affordable = canAfford(cDef.cost);
+
+            const btn = document.createElement("button");
+            btn.className = "adr-btn" + (!affordable ? " disabled" : "");
+            let tipHtml = "";
+            for (const [res, amt] of Object.entries(cDef.cost)) {
+              tipHtml += `<div class="tooltip-row"><span>${res}</span><span>${amt}</span></div>`;
+            }
+            btn.innerHTML = `
+              <span class="btn-label">${cDef.name}</span>
+              <div class="adr-tooltip ${tipHtml ? "has-content" : ""}">${tipHtml}</div>
+            `;
+            btn.onclick = () => craftItem(cDef);
+            craftContainer.appendChild(btn);
+          }
+        } else {
+          craftCol.style.display = "none";
+        }
+
+        // Buy Column (Trading Post unlocked)
+        const buyCol = $("buy-column");
+        const buyContainer = $("buy-buttons");
+        if ((state.buildings["trading post"] || 0) > 0) {
+          buyCol.style.display = "block";
+          buyContainer.innerHTML = "";
+          for (const good of TRADE_GOODS) {
+            if (good.unique && (state.stores[good.id] || 0) >= 1) continue;
+            const affordable = canAfford(good.cost);
+
+            const btn = document.createElement("button");
+            btn.className = "adr-btn" + (!affordable ? " disabled" : "");
+            let tipHtml = "";
+            for (const [res, amt] of Object.entries(good.cost)) {
+              tipHtml += `<div class="tooltip-row"><span>${res}</span><span>${amt}</span></div>`;
+            }
+            btn.innerHTML = `
+              <span class="btn-label">${good.name}</span>
+              <div class="adr-tooltip ${tipHtml ? "has-content" : ""}">${tipHtml}</div>
+            `;
+            btn.onclick = () => buyGood(good);
+            buyContainer.appendChild(btn);
+          }
+        } else {
+          buyCol.style.display = "none";
+        }
+      }
+
+      function renderVillage() {
+        const trapsBtn = $("btn-traps");
+        trapsBtn.style.display = (state.buildings.trap || 0) > 0 ? "inline-flex" : "none";
+
+        const workerList = $("worker-list");
+        workerList.innerHTML = "";
+        if (state.population <= 0) return;
+
+        for (const job of JOBS) {
+          if (job.req && !(state.buildings[job.req] > 0)) continue;
+          if (job.reqBuilding && !state.minesUnlocked[job.reqBuilding]) continue;
+
+          const count = state.workers[job.id] || 0;
+          const row = document.createElement("div");
+          row.className = "worker-row";
+
+          let tipHtml = "";
+          for (const [res, rate] of Object.entries(job.prod)) {
+            const net = Math.round(rate * count * 10) / 10;
+            const sign = net > 0 ? "+" : "";
+            tipHtml += `<div class="tooltip-row"><span>${res}</span><span>${sign}${net} per 10s</span></div>`;
+          }
+
+          if (job.id === "gatherer") {
+            row.innerHTML = `
+              <span>${job.name}</span>
+              <span>${count}</span>
+              <div class="adr-tooltip has-content">${tipHtml}</div>
+            `;
+          } else {
+            const canInc = (state.workers.gatherer || 0) > 0;
+            const canDec = count > 0;
+            row.innerHTML = `
+              <span>${job.name}</span>
+              <span class="worker-controls">
+                <span>${count}</span>
+                <span class="arrow-stack">
+                  <button class="arrow-btn" data-job="${job.id}" data-dir="1" ${!canInc ? "disabled" : ""}>^</button>
+                  <button class="arrow-btn" data-job="${job.id}" data-dir="-1" ${!canDec ? "disabled" : ""}>v</button>
+                </span>
+              </span>
+              <div class="adr-tooltip has-content">${tipHtml}</div>
+            `;
+          }
+          workerList.appendChild(row);
+        }
+
+        workerList.querySelectorAll(".arrow-btn").forEach((btn) => {
+          btn.onclick = () => adjustWorker(btn.dataset.job, parseInt(btn.dataset.dir, 10));
+        });
+      }
+
+      function renderPath() {
+        const exp = state.expedition;
+        const embarkView = $("embark-view");
+        const worldView = $("world-view");
+
+        if (exp.active) {
+          embarkView.style.display = "none";
+          worldView.classList.add("active");
+          renderWorldMap();
+          return;
+        }
+
+        embarkView.style.display = "block";
+        worldView.classList.remove("active");
+
+        const bagCap = exp.bagCap || 10;
+        const free = Math.max(0, Math.round((bagCap - getRucksackWeight()) * 10) / 10);
+        $("rucksack-free").textContent = `free ${free}/${bagCap}`;
+
+        const waterCap = exp.waterCap || 10;
+        const waterCount = Math.min(exp.supplies.water || 0, waterCap);
+        exp.supplies.water = waterCount;
+
+        const packableItems = ["cured meat", "torch", "bullets"];
+        let rowsHtml = `
+          <div class="supply-row">
+            <span>armour</span>
+            <span>${exp.armour}</span>
+          </div>
+          <div class="supply-row">
+            <span>weapon</span>
+            <span>${exp.weapon}</span>
+          </div>
+          <div class="supply-row">
+            <span>water</span>
+            <span class="worker-controls">
+              <span>${waterCount}/${waterCap}</span>
+              <span class="arrow-stack">
+                <button class="arrow-btn sup-up" data-item="water" ${waterCount >= waterCap ? "disabled" : ""}>^</button>
+                <button class="arrow-btn sup-dn" data-item="water" ${waterCount <= 0 ? "disabled" : ""}>v</button>
+              </span>
+            </span>
+          </div>
+        `;
+
+        for (const item of packableItems) {
+          const avail = Math.floor(state.stores[item] || 0);
+          if ((exp.supplies[item] || 0) > avail) exp.supplies[item] = avail;
+          const cnt = exp.supplies[item] || 0;
+          if (avail <= 0 && cnt <= 0 && item !== "cured meat") continue;
+
+          const itemW = SUPPLY_WEIGHTS[item] || 1;
+          const canAdd = free >= itemW && cnt < avail;
+          rowsHtml += `
+            <div class="supply-row">
+              <span>${item}</span>
+              <span class="worker-controls">
+                <span>${cnt}</span>
+                <span class="arrow-stack">
+                  <button class="arrow-btn sup-up" data-item="${item}" ${!canAdd ? "disabled" : ""}>^</button>
+                  <button class="arrow-btn sup-dn" data-item="${item}" ${cnt <= 0 ? "disabled" : ""}>v</button>
+                </span>
+              </span>
+            </div>
+          `;
+        }
+
+        $("supplies-rows").innerHTML = rowsHtml;
+
+        document.querySelectorAll(".sup-up").forEach((b) => {
+          b.onclick = () => adjustSupply(b.dataset.item, 1);
+        });
+        document.querySelectorAll(".sup-dn").forEach((b) => {
+          b.onclick = () => adjustSupply(b.dataset.item, -1);
+        });
+      }
+
+      function renderWorldMap() {
+        const exp = state.expedition;
+        const bagCap = exp.bagCap || 10;
+        const free = Math.max(0, Math.round((bagCap - getPocketWeight()) * 10) / 10);
+
+        $("pockets-hp").textContent = `-pockets- hp: ${exp.hp}/${exp.maxHp}`;
+        $("pockets-free").textContent = `free ${free}/${bagCap}`;
+
+        const pocketsList = $("pockets-list");
+        pocketsList.innerHTML = "";
+        for (const [item, count] of Object.entries(exp.pockets)) {
+          if (count > 0) {
+            const chip = document.createElement("div");
+            chip.className = "pocket-item";
+            chip.textContent = `${item}:${count}`;
+            pocketsList.appendChild(chip);
+          }
+        }
+
+        let lines = [];
+        for (let y = 0; y < MAP_SIZE; y++) {
+          let rowStr = "";
+          for (let x = 0; x < MAP_SIZE; x++) {
+            if (x === exp.x && y === exp.y) {
+              rowStr += `<span class="map-player">@</span>`;
+            } else if (!state.revealed[y][x]) {
+              rowStr += `<span class="map-fog">.</span>`;
+            } else {
+              const ch = state.worldMap[y][x];
+              if (/[A-Z]/.test(ch)) {
+                rowStr += `<span class="map-landmark">${ch}</span>`;
+              } else {
+                rowStr += ch;
+              }
+            }
+          }
+          lines.push(rowStr);
+        }
+        $("ascii-map").innerHTML = lines.join("\n");
+
+        const curTile = state.worldMap[exp.y][exp.x];
+        const landmarkNames = {
+          V: "The Village",
+          A: "An Abandoned Town",
+          C: "A Damp Cave",
+          H: "An Old House",
+          I: "An Iron Mine",
+          B: "A Deep Borehole",
+          W: "A Sulphur Swamp",
+          F: "A Forgotten Battlefield"
+        };
+        const lbl = $("landmark-label");
+        lbl.textContent = landmarkNames[curTile] || "Wanderer";
+        lbl.classList.remove("hidden");
+      }
+
+      function renderRightPanel() {
+        // Village Box
+        const vBox = $("village-box");
+        const builtEntries = Object.entries(state.buildings).filter(([, cnt]) => cnt > 0);
+        if (builtEntries.length > 0 && state.activeTab !== "room") {
+          vBox.style.display = "block";
+          $("village-pop").textContent = `pop ${state.population}/${getMaxPop()}`;
+          const list = $("village-buildings-list");
+          list.innerHTML = "";
+          for (const [bId, cnt] of builtEntries) {
+            const label = bId === "trap" ? "baited trap" : bId;
+            list.innerHTML += `<div class="store-row"><span>${label}</span><span>${cnt}</span></div>`;
+          }
+        } else {
+          vBox.style.display = "none";
+        }
+
+        // Stores Box
+        const sBox = $("stores-box");
+        const keys = STORE_ORDER.filter((k) => state.stores[k] !== undefined);
+        if (keys.length > 0 && !state.expedition.active) {
+          sBox.style.display = "block";
+          const list = $("stores-list");
+          list.innerHTML = "";
+          for (const k of keys) {
+            const val = Math.floor(state.stores[k]);
+            list.innerHTML += `
+              <div class="store-row">
+                <span>${k}</span>
+                <span>${val}</span>
+              </div>
+            `;
+          }
+        } else {
+          sBox.style.display = "none";
+        }
+      }
+
+      function renderAll() {
+        renderTabs();
+        renderRoom();
+        renderVillage();
+        renderPath();
+        renderRightPanel();
+      }
+
+      // ---------- PERIODIC GAME LOOPS (WORKER TICK & VILLAGER ARRIVAL) ----------
+      setInterval(() => {
+        const maxPop = getMaxPop();
+        if (state.population < maxPop && Math.random() < 0.65) {
+          const arriving = Math.min(maxPop - state.population, Math.ceil(Math.random() * 2));
+          state.population += arriving;
+          state.workers.gatherer = (state.workers.gatherer || 0) + arriving;
+          notify(arriving === 1 ? "a stranger arrives in the night." : "a weathered family takes up in one of the huts.");
+        }
+
+        if (state.population > 0) {
+          const g = state.workers.gatherer || 0;
+          if (g > 0) addStore("wood", g * 1);
+
+          const h = state.workers.hunter || 0;
+          if (h > 0) {
+            addStore("fur", h * 0.5);
+            addStore("meat", h * 0.5);
+          }
+
+          const tr = state.workers.trapper || 0;
+          for (let i = 0; i < tr; i++) {
+            if ((state.stores.meat || 0) >= 1) {
+              spend({ meat: 1 });
+              addStore("bait", 1);
+            }
+          }
+
+          const ta = state.workers.tanner || 0;
+          for (let i = 0; i < ta; i++) {
+            if ((state.stores.fur || 0) >= 5) {
+              spend({ fur: 5 });
+              addStore("leather", 1);
+            }
+          }
+
+          const ch = state.workers.charcutier || 0;
+          for (let i = 0; i < ch; i++) {
+            if ((state.stores.meat || 0) >= 5 && (state.stores.wood || 0) >= 5) {
+              spend({ meat: 5, wood: 5 });
+              addStore("cured meat", 1);
+            }
+          }
+
+          const im = state.workers["iron miner"] || 0;
+          for (let i = 0; i < im; i++) {
+            if ((state.stores["cured meat"] || 0) >= 1) {
+              spend({ "cured meat": 1 });
+              addStore("iron", 1);
+            }
+          }
+
+          const cm = state.workers["coal miner"] || 0;
+          for (let i = 0; i < cm; i++) {
+            if ((state.stores["cured meat"] || 0) >= 1) {
+              spend({ "cured meat": 1 });
+              addStore("coal", 1);
+            }
+          }
+
+          const sm = state.workers["sulphur miner"] || 0;
+          for (let i = 0; i < sm; i++) {
+            if ((state.stores["cured meat"] || 0) >= 1) {
+              spend({ "cured meat": 1 });
+              addStore("sulphur", 1);
+            }
+          }
+
+          const sw = state.workers.steelworker || 0;
+          for (let i = 0; i < sw; i++) {
+            if ((state.stores.iron || 0) >= 1 && (state.stores.coal || 0) >= 1) {
+              spend({ iron: 1, coal: 1 });
+              addStore("steel", 1);
+            }
+          }
+
+          const ar = state.workers.armourer || 0;
+          for (let i = 0; i < ar; i++) {
+            if ((state.stores.steel || 0) >= 1 && (state.stores.sulphur || 0) >= 1) {
+              spend({ steel: 1, sulphur: 1 });
+              addStore("bullets", 1);
+            }
+          }
+        }
+
+        autoSaveSilent();
+        renderAll();
+      }, 6000);
+
+      // ---------- KEYBOARD & TOUCH D-PAD CONTROLS ----------
+      window.addEventListener("keydown", (e) => {
+        if (activeModal) return;
+        if (state.activeTab === "path" && state.expedition.active) {
+          const key = e.key.toLowerCase();
+          if (key === "w" || e.key === "ArrowUp") { e.preventDefault(); movePlayer(0, -1); }
+          if (key === "s" || e.key === "ArrowDown") { e.preventDefault(); movePlayer(0, 1); }
+          if (key === "a" || e.key === "ArrowLeft") { e.preventDefault(); movePlayer(-1, 0); }
+          if (key === "d" || e.key === "ArrowRight") { e.preventDefault(); movePlayer(1, 0); }
+        }
+      });
+
+      document.querySelectorAll(".dpad-btn").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          const [dx, dy] = btn.dataset.dir.split(",").map(Number);
+          movePlayer(dx, dy);
+        });
+      });
+
+      // ---------- SAVE / EXPORT / IMPORT SYSTEM ----------
+      function encodeSave() {
+        return btoa(unescape(encodeURIComponent(JSON.stringify(state))));
+      }
+
+      function decodeSave(str) {
+        const json = decodeURIComponent(escape(atob(str.trim())));
+        const parsed = JSON.parse(json);
+        if (!parsed || typeof parsed.stores !== "object") throw new Error("Invalid save");
+        return parsed;
+      }
+
+      function autoSaveSilent() {
+        try {
+          localStorage.setItem("adr_forest_save_v1", encodeSave());
+        } catch (e) {}
+      }
+
+      $("link-save").addEventListener("click", () => {
+        openModal("Export / Import", `
+          <div class="modal-desc">export or import save data, for backing up<br><br>or migrating computers</div>
+          <div class="modal-actions">
+            <button class="adr-btn" id="btn-do-export"><span class="btn-label">export</span></button>
+            <button class="adr-btn" id="btn-do-import"><span class="btn-label">import</span></button>
+            <button class="adr-btn" id="btn-save-cancel"><span class="btn-label">cancel</span></button>
+          </div>
+        `);
+
+        $("btn-save-cancel").onclick = closeModal;
+
+        $("btn-do-export").onclick = () => {
+          const code = encodeSave();
+          openModal("Export / Import", `
+            <div class="modal-desc">save this.</div>
+            <textarea class="save-textarea" id="export-area" readonly>${code}</textarea>
+            <div class="modal-actions">
+              <button class="adr-btn" id="btn-got-it"><span class="btn-label">got it</span></button>
+            </div>
+          `);
+          const area = $("export-area");
+          area.select();
+          $("btn-got-it").onclick = () => {
+            area.select();
+            try { document.execCommand("copy"); } catch (e) {}
+            autoSaveSilent();
+            closeModal();
+            showToast("copied & saved.");
+          };
+        };
+
+        $("btn-do-import").onclick = () => {
+          openModal("Export / Import", `
+            <div class="modal-desc">are you sure?<br><br>if the code is invalid, all data will be lost.<br><br>this is irreversible.</div>
+            <div class="modal-actions">
+              <button class="adr-btn" id="btn-import-yes"><span class="btn-label">yes</span></button>
+              <button class="adr-btn" id="btn-import-no"><span class="btn-label">no</span></button>
+            </div>
+          `);
+          $("btn-import-no").onclick = closeModal;
+          $("btn-import-yes").onclick = () => {
+            openModal("Export / Import", `
+              <div class="modal-desc">put the save code here.</div>
+              <textarea class="save-textarea" id="import-area" placeholder="paste base64 save code..."></textarea>
+              <div class="modal-actions">
+                <button class="adr-btn" id="btn-import-confirm"><span class="btn-label">import</span></button>
+                <button class="adr-btn" id="btn-import-cancel"><span class="btn-label">cancel</span></button>
+              </div>
+            `);
+            $("btn-import-cancel").onclick = closeModal;
+            $("btn-import-confirm").onclick = () => {
+              try {
+                const loaded = decodeSave($("import-area").value);
+                state = loaded;
+                document.body.classList.toggle("lights-on", Boolean(state.lightsOn));
+                $("link-lights").textContent = state.lightsOn ? "lights off." : "lights on.";
+                $("link-hyper").classList.toggle("active-toggle", Boolean(state.hyper));
+                autoSaveSilent();
+                closeModal();
+                notify("save data restored.");
+                showToast("loaded.");
+              } catch (err) {
+                closeModal();
+                notify("invalid save code.");
+              }
+            };
+          };
+        };
+      });
+
+      // ---------- FOOTER TOGGLES ----------
+      $("link-quickstart").addEventListener("click", () => {
+        state = createDefaultState(true);
+        $("notifications").innerHTML = "";
+        notify("the fire is roaring.");
+        notify("the traps contain bits of meat, scattered teeth, scraps of fur, tattered cloth and strange scales.");
+        notify("dry brush and dead branches litter the forest floor.");
+        notify("the room is hot.");
+        switchTab("room");
+        showToast("village loaded.");
+      });
+
+      $("link-restart").addEventListener("click", () => {
+        openModal("Restart", `
+          <div class="modal-desc">restart the game from the beginning?</div>
+          <div class="modal-actions">
+            <button class="adr-btn" id="btn-restart-yes"><span class="btn-label">yes</span></button>
+            <button class="adr-btn" id="btn-restart-no"><span class="btn-label">no</span></button>
+          </div>
+        `);
+        $("btn-restart-no").onclick = closeModal;
+        $("btn-restart-yes").onclick = () => {
+          localStorage.removeItem("adr_forest_save_v1");
+          state = createDefaultState(false);
+          $("notifications").innerHTML = "";
+          notify("the room is freezing.");
+          notify("the fire is dead.");
+          closeModal();
+          switchTab("room");
+        };
+      });
+
+      $("link-hyper").addEventListener("click", () => {
+        state.hyper = !state.hyper;
+        $("link-hyper").classList.toggle("active-toggle", state.hyper);
+        SoundFX.click();
+        showToast(state.hyper ? "hyper mode on." : "normal speed.");
+      });
+
+      $("link-lights").addEventListener("click", () => {
+        state.lightsOn = !state.lightsOn;
+        document.body.classList.toggle("lights-on", state.lightsOn);
+        $("link-lights").textContent = state.lightsOn ? "lights off." : "lights on.";
+        SoundFX.click();
+      });
+
+      $("link-sfx").addEventListener("click", () => {
+        SoundFX.enabled = !SoundFX.enabled;
+        $("link-sfx").textContent = SoundFX.enabled ? "sfx on." : "sfx off.";
+        if (SoundFX.enabled) SoundFX.click();
+      });
+
+      // ---------- INITIALIZATION ----------
+      window.addEventListener("load", () => {
+        let restored = false;
+        try {
+          const saved = localStorage.getItem("adr_forest_save_v1");
+          if (saved) {
+            state = decodeSave(saved);
+            restored = true;
+          }
+        } catch (e) {}
+
+        document.body.classList.toggle("lights-on", Boolean(state.lightsOn));
+        $("link-lights").textContent = state.lightsOn ? "lights off." : "lights on.";
+        $("link-hyper").classList.toggle("active-toggle", Boolean(state.hyper));
+
+        if (!restored) {
+          notify("the room is freezing.");
+          notify("the fire is dead.");
+        } else {
+          notify("the fire flickers back to life.");
+        }
+        renderAll();
+      });
+    })();
+  </script>
+</body>
+</html>
