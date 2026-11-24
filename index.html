@@ -3,13 +3,14 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Dark Room - Forest Edition (NEW)</title>
+  <title>A Dark Room — Forest Edition (NEW)</title>
   <style>
     /* ==========================================================================
        A DARK ROOM + INFINITE FOREST SOUNDSCAPE - THEME & LAYOUT TOKENS
        ========================================================================== */
     :root {
-      --bg-color: #050706;
+      --bg-color: #030405;
+      --panel-bg: rgba(3, 5, 6, 0.76);
       --text-color: #dddddd;
       --muted-text: #888888;
       --disabled-text: #525252;
@@ -17,16 +18,17 @@
       --disabled-border: #333333;
       --cooldown-fill: rgba(255, 255, 255, 0.22);
       --hover-bg: rgba(255, 255, 255, 0.08);
-      --modal-bg: #0b0e0c;
-      --modal-backdrop: rgba(0, 0, 0, 0.80);
-      --tooltip-bg: #121614;
+      --modal-bg: #080b0a;
+      --modal-backdrop: rgba(0, 0, 0, 0.82);
+      --tooltip-bg: #0f1312;
       --accent-forest: #68b891;
       --font-main: "Times New Roman", Times, Georgia, serif;
       --font-mono: "Courier New", Courier, monospace;
     }
 
     body.lights-on {
-      --bg-color: #f8f9f8;
+      --bg-color: #f4f6f5;
+      --panel-bg: rgba(244, 246, 245, 0.82);
       --text-color: #181a19;
       --muted-text: #626865;
       --disabled-text: #a5aba8;
@@ -35,7 +37,7 @@
       --cooldown-fill: rgba(0, 0, 0, 0.13);
       --hover-bg: rgba(0, 0, 0, 0.05);
       --modal-bg: #ffffff;
-      --modal-backdrop: rgba(255, 255, 255, 0.80);
+      --modal-backdrop: rgba(255, 255, 255, 0.82);
       --tooltip-bg: #f1f4f2;
       --accent-forest: #2c7a56;
     }
@@ -60,6 +62,24 @@
     }
 
     /* ==========================================================================
+       HIGH-DPI 4K DARK & CREEPY FOREST MOTION BACKDROP CANVAS
+       ========================================================================== */
+    #creepy-forest-canvas {
+      position: fixed;
+      inset: 0;
+      width: 100vw;
+      height: 100vh;
+      z-index: 0;
+      pointer-events: none;
+      display: block;
+      transition: opacity 0.45s ease;
+    }
+
+    #creepy-forest-canvas.visual-hidden {
+      opacity: 0;
+    }
+
+    /* ==========================================================================
        MAIN THREE-COLUMN CONTAINER
        ========================================================================== */
     #wrapper {
@@ -71,6 +91,7 @@
       grid-template-columns: 235px 1fr 250px;
       gap: 28px;
       position: relative;
+      z-index: 1;
     }
 
     @media (max-width: 920px) {
@@ -106,9 +127,14 @@
       font-size: 15px;
       line-height: 1.42;
       color: var(--text-color);
+      text-shadow: 0 1px 4px rgba(0, 0, 0, 0.85);
       opacity: 0;
       transform: translateY(-4px);
       animation: fadeInLog 0.4s forwards;
+    }
+
+    body.lights-on .notification {
+      text-shadow: 0 1px 3px rgba(255, 255, 255, 0.85);
     }
 
     @keyframes fadeInLog {
@@ -128,62 +154,7 @@
       pointer-events: none;
       transition: background 0.35s ease;
     }
-
-    /* ==========================================================================
-       CENTER PANEL: TABS & MAIN INTERACTION AREA
-       ========================================================================== */
-    #main-panel {
-      display: flex;
-      flex-direction: column;
-      min-width: 0;
-    }
-
-    #header-tabs {
-      display: flex;
-      flex-wrap: wrap;
-      align-items: center;
-      gap: 12px;
-      margin-bottom: 24px;
-      font-size: 18px;
-    }
-
-    .tab-item {
-      cursor: pointer;
-      color: var(--muted-text);
-      padding-bottom: 2px;
-      border-bottom: 1px solid transparent;
-      transition: color 0.2s, border-color 0.2s;
-    }
-
-    .tab-item:hover {
-      color: var(--text-color);
-    }
-
-    .tab-item.active {
-      color: var(--text-color);
-      border-bottom: 1px solid var(--text-color);
-    }
-
-    .tab-item.hidden, .tab-separator.hidden {
-      display: none;
-    }
-
-    .tab-separator {
-      color: var(--disabled-text);
-      pointer-events: none;
-    }
-
-    .tab-content {
-      display: none;
-    }
-
-    .tab-content.active {
-      display: block;
-    }
-
-    /* ==========================================================================
-       ADR BUTTONS WITH COOLDOWN PROGRESS & HOVER TOOLTIPS
-       ========================================================================== */
+/* ... existing code ... -->
     .adr-btn {
       position: relative;
       display: inline-flex;
@@ -192,7 +163,7 @@
       min-width: 122px;
       padding: 6px 14px;
       border: 1px solid var(--border-color);
-      background: transparent;
+      background: var(--panel-bg);
       color: var(--text-color);
       font-family: var(--font-main);
       font-size: 15px;
@@ -202,163 +173,12 @@
       transition: border-color 0.2s, color 0.2s, background-color 0.15s;
       overflow: visible;
     }
-
-    .adr-btn:hover:not(.disabled):not(.on-cooldown) {
-      background-color: var(--hover-bg);
-    }
-
-    .adr-btn.disabled {
-      border-color: var(--disabled-border);
-      color: var(--disabled-text);
-      cursor: default;
-    }
-
-    .adr-btn.on-cooldown {
-      cursor: default;
-    }
-
-    .adr-btn .cooldown-bar {
-      position: absolute;
-      top: 0;
-      left: 0;
-      bottom: 0;
-      width: 0%;
-      background-color: var(--cooldown-fill);
-      pointer-events: none;
-      z-index: 0;
-    }
-
-    .adr-btn .btn-label {
-      position: relative;
-      z-index: 1;
-    }
-
-    /* Hover Tooltip Box */
-    .adr-tooltip {
-      display: none;
-      position: absolute;
-      top: calc(100% + 4px);
-      left: 0;
-      min-width: 122px;
-      background-color: var(--tooltip-bg);
-      border: 1px solid var(--border-color);
-      padding: 5px 8px;
-      font-size: 13px;
-      color: var(--text-color);
-      z-index: 60;
-      pointer-events: none;
-      white-space: nowrap;
-      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.45);
-    }
-
-    .adr-btn:hover .adr-tooltip.has-content,
-    .worker-row:hover .adr-tooltip.has-content {
-      display: block;
-    }
-
-    .tooltip-row {
-      display: flex;
-      justify-content: space-between;
-      gap: 14px;
-    }
-
-    /* ==========================================================================
-       TAB 1: A FIRELIT ROOM (BUILD / CRAFT / BUY)
-       ========================================================================== */
-    .room-columns {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(135px, 1fr));
-      gap: 24px;
-      margin-top: 16px;
-    }
-
-    .section-label {
-      font-size: 15px;
-      margin-bottom: 10px;
-      color: var(--text-color);
-    }
-
-    .btn-stack {
-      display: flex;
-      flex-direction: column;
-      align-items: flex-start;
-    }
-
-    /* ==========================================================================
-       TAB 2: A SILENT FOREST / A MODEST VILLAGE
-       ========================================================================== */
-    .village-columns {
-      display: grid;
-      grid-template-columns: 155px 1fr;
-      gap: 24px;
-      align-items: start;
-    }
-
-    @media (max-width: 540px) {
-      .village-columns {
-        grid-template-columns: 1fr;
-      }
-    }
-
-    .worker-list {
-      display: flex;
-      flex-direction: column;
-      gap: 7px;
-      max-width: 260px;
-    }
-
-    .worker-row {
-      position: relative;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 2px 4px;
-      font-size: 15px;
-    }
-
-    .worker-controls {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .arrow-stack {
-      display: inline-flex;
-      flex-direction: column;
-      line-height: 0.75;
-    }
-
-    .arrow-btn {
-      background: none;
-      border: none;
-      color: var(--text-color);
-      cursor: pointer;
-      font-size: 12px;
-      padding: 1px 4px;
-      font-family: var(--font-mono);
-    }
-
-    .arrow-btn:hover:not(:disabled) {
-      opacity: 0.75;
-    }
-
-    .arrow-btn:disabled {
-      color: var(--disabled-text);
-      cursor: default;
-    }
-
-    /* ==========================================================================
-       RIGHT PANEL: -VILLAGE- AND -STORES- BOXES
-       ========================================================================== */
-    #right-panel {
-      display: flex;
-      flex-direction: column;
-      gap: 22px;
-    }
-
+/* ... existing code ... -->
     .legend-box {
       position: relative;
       border: 1px solid var(--border-color);
+      background-color: var(--panel-bg);
+      backdrop-filter: blur(2px);
       padding: 14px 12px 10px 12px;
       font-size: 15px;
     }
@@ -396,6 +216,7 @@
     .supplies-box {
       position: relative;
       border: 1px solid var(--border-color);
+      background-color: var(--panel-bg);
       padding: 16px 14px 12px 14px;
       max-width: 270px;
       margin-bottom: 18px;
@@ -424,6 +245,7 @@
     .pockets-box {
       position: relative;
       border: 1px solid var(--border-color);
+      background-color: var(--panel-bg);
       padding: 14px 12px 10px 12px;
       margin-bottom: 16px;
       display: flex;
@@ -431,352 +253,7 @@
       gap: 8px;
       min-height: 48px;
     }
-
-    .pocket-item {
-      border: 1px solid var(--border-color);
-      padding: 2px 8px;
-      font-size: 14px;
-    }
-
-    #map-container {
-      position: relative;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      padding: 6px 0;
-    }
-
-    #ascii-map {
-      font-family: var(--font-mono);
-      font-size: 15px;
-      line-height: 1.22;
-      letter-spacing: 3px;
-      white-space: pre;
-      text-align: center;
-      cursor: pointer;
-      padding: 6px;
-    }
-
-    @media (max-width: 540px) {
-      #ascii-map {
-        font-size: 12px;
-        letter-spacing: 2px;
-      }
-    }
-
-    .map-player {
-      font-weight: bold;
-      text-decoration: underline;
-    }
-
-    .map-landmark {
-      font-weight: bold;
-    }
-
-    .map-fog {
-      color: transparent;
-    }
-
-    #landmark-label {
-      margin-top: 8px;
-      font-size: 14px;
-      min-height: 22px;
-      color: var(--text-color);
-      border: 1px solid var(--border-color);
-      padding: 2px 10px;
-      display: inline-block;
-    }
-
-    #landmark-label.hidden {
-      visibility: hidden;
-    }
-
-    .dpad-grid {
-      display: grid;
-      grid-template-columns: repeat(3, 42px);
-      grid-template-rows: repeat(2, 38px);
-      gap: 6px;
-      margin-top: 12px;
-      justify-content: center;
-    }
-
-    .dpad-btn {
-      border: 1px solid var(--border-color);
-      background: transparent;
-      color: var(--text-color);
-      font-family: var(--font-mono);
-      font-size: 15px;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-
-    .dpad-btn:active, .dpad-btn:hover {
-      background: var(--hover-bg);
-    }
-
-    /* ==========================================================================
-       MODAL OVERLAYS (COMBAT, LANDMARK ENCOUNTERS, EXPORT/IMPORT)
-       ========================================================================== */
-    .modal-backdrop {
-      display: none;
-      position: fixed;
-      inset: 0;
-      background-color: var(--modal-backdrop);
-      z-index: 200;
-      align-items: center;
-      justify-content: center;
-      padding: 16px;
-    }
-
-    .modal-backdrop.open {
-      display: flex;
-    }
-
-    .modal-box {
-      position: relative;
-      background-color: var(--modal-bg);
-      border: 1px solid var(--border-color);
-      padding: 22px 24px;
-      width: 100%;
-      max-width: 440px;
-      box-shadow: 0 12px 38px rgba(0, 0, 0, 0.85);
-    }
-
-    .modal-title {
-      position: absolute;
-      top: -12px;
-      left: 12px;
-      background-color: var(--modal-bg);
-      padding: 0 6px;
-      font-weight: bold;
-      font-size: 16px;
-    }
-
-    .modal-desc {
-      margin: 4px 0 18px 0;
-      font-size: 15px;
-    }
-
-    .combat-arena {
-      display: flex;
-      justify-content: space-around;
-      align-items: center;
-      margin: 22px 0 24px 0;
-      text-align: center;
-      font-family: var(--font-mono);
-    }
-
-    .combatant {
-      position: relative;
-      min-width: 80px;
-    }
-
-    .combat-hp {
-      font-size: 14px;
-      margin-bottom: 4px;
-    }
-
-    .combat-glyph {
-      font-size: 18px;
-      font-weight: bold;
-    }
-
-    .damage-floater {
-      position: absolute;
-      top: -22px;
-      left: 50%;
-      transform: translateX(-50%);
-      font-size: 14px;
-      font-weight: bold;
-      animation: floatUp 0.9s forwards;
-      pointer-events: none;
-    }
-
-    @keyframes floatUp {
-      0% { opacity: 1; transform: translate(-50%, 0); }
-      100% { opacity: 0; transform: translate(-50%, -18px); }
-    }
-
-    .modal-actions {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 12px;
-    }
-
-    .loot-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 8px 16px;
-      margin-bottom: 16px;
-    }
-
-    .save-textarea {
-      width: 100%;
-      height: 150px;
-      background-color: var(--bg-color);
-      color: var(--text-color);
-      border: 1px solid var(--border-color);
-      font-family: var(--font-mono);
-      font-size: 12px;
-      padding: 8px;
-      resize: none;
-      margin-bottom: 14px;
-      user-select: text;
-    }
-
-    /* ==========================================================================
-       FOREST SOUNDSCAPE POPOVER DRAWER (SLEEK INTEGRATED MIXER)
-       ========================================================================== */
-    #forest-drawer {
-      display: none;
-      position: fixed;
-      bottom: 48px;
-      right: 24px;
-      width: 340px;
-      max-width: calc(100vw - 32px);
-      background-color: var(--modal-bg);
-      border: 1px solid var(--border-color);
-      padding: 18px 18px 16px 18px;
-      z-index: 150;
-      box-shadow: 0 14px 42px rgba(0, 0, 0, 0.72);
-      transition: background-color 0.35s ease, border-color 0.35s ease;
-    }
-
-    #forest-drawer.open {
-      display: block;
-      animation: drawerPop 0.2s ease-out;
-    }
-
-    @keyframes drawerPop {
-      from { opacity: 0; transform: translateY(8px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-
-    .drawer-legend {
-      position: absolute;
-      top: -11px;
-      left: 10px;
-      background-color: var(--modal-bg);
-      padding: 0 6px;
-      font-size: 14px;
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      transition: background-color 0.35s ease;
-    }
-
-    .forest-dot {
-      display: inline-block;
-      width: 7px;
-      height: 7px;
-      border-radius: 50%;
-      background-color: var(--disabled-text);
-      transition: background-color 0.3s, box-shadow 0.3s;
-    }
-
-    .forest-dot.live {
-      background-color: var(--accent-forest);
-      box-shadow: 0 0 8px var(--accent-forest);
-    }
-
-    .drawer-header-row {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 12px;
-      gap: 8px;
-    }
-
-    .drawer-whisper {
-      font-size: 12px;
-      font-style: italic;
-      color: var(--muted-text);
-      margin-bottom: 12px;
-      min-height: 18px;
-    }
-
-    .preset-strip {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 6px;
-      margin-bottom: 14px;
-    }
-
-    .forest-preset-btn {
-      border: 1px solid var(--disabled-border);
-      background: transparent;
-      color: var(--muted-text);
-      font-family: var(--font-main);
-      font-size: 12px;
-      padding: 3px 8px;
-      cursor: pointer;
-      transition: all 0.15s;
-    }
-
-    .forest-preset-btn:hover {
-      border-color: var(--border-color);
-      color: var(--text-color);
-    }
-
-    .forest-preset-btn.active {
-      border-color: var(--border-color);
-      color: var(--text-color);
-      background-color: var(--hover-bg);
-    }
-
-    .mixer-row {
-      margin-bottom: 10px;
-    }
-
-    .mixer-row:last-child {
-      margin-bottom: 0;
-    }
-
-    .mixer-label-line {
-      display: flex;
-      justify-content: space-between;
-      font-size: 13px;
-      margin-bottom: 3px;
-    }
-
-    .mixer-val {
-      font-family: var(--font-mono);
-      font-size: 12px;
-      color: var(--muted-text);
-    }
-
-    input[type="range"].adr-slider {
-      -webkit-appearance: none;
-      appearance: none;
-      width: 100%;
-      height: 3px;
-      background: var(--disabled-border);
-      outline: none;
-      cursor: pointer;
-    }
-
-    input[type="range"].adr-slider::-webkit-slider-thumb {
-      -webkit-appearance: none;
-      appearance: none;
-      width: 11px;
-      height: 11px;
-      background: var(--text-color);
-      border: 1px solid var(--bg-color);
-      cursor: pointer;
-    }
-
-    input[type="range"].adr-slider::-moz-range-thumb {
-      width: 11px;
-      height: 11px;
-      background: var(--text-color);
-      border: 1px solid var(--bg-color);
-      border-radius: 0;
-      cursor: pointer;
-    }
-
+/* ... existing code ... -->
     /* ==========================================================================
        FOOTER UTILITY LINKS & STATUS
        ========================================================================== */
@@ -785,7 +262,8 @@
       bottom: 0;
       left: 0;
       right: 0;
-      background-color: var(--bg-color);
+      background-color: var(--panel-bg);
+      backdrop-filter: blur(4px);
       padding: 11px 24px;
       display: flex;
       justify-content: center;
@@ -794,49 +272,12 @@
       z-index: 120;
       transition: background-color 0.35s ease;
     }
-
-    .footer-inner {
-      max-width: 1140px;
-      width: 100%;
-      display: flex;
-      justify-content: flex-end;
-      align-items: center;
-      flex-wrap: wrap;
-      gap: 15px;
-    }
-
-    .footer-link {
-      color: var(--muted-text);
-      text-decoration: underline;
-      cursor: pointer;
-      transition: color 0.2s;
-      display: inline-flex;
-      align-items: center;
-      gap: 5px;
-    }
-
-    .footer-link:hover, .footer-link.active-toggle {
-      color: var(--text-color);
-    }
-
-    #saved-toast {
-      position: fixed;
-      top: 16px;
-      right: 24px;
-      font-size: 14px;
-      color: var(--muted-text);
-      opacity: 0;
-      transition: opacity 0.3s ease;
-      pointer-events: none;
-      z-index: 300;
-    }
-
-    #saved-toast.visible {
-      opacity: 1;
-    }
-  </style>
+/* ... existing code ... -->
 </head>
 <body>
+  <!-- HIGH-DPI 4K DARK & CREEPY NO-LIGHT FOREST MOTION CANVAS -->
+  <canvas id="creepy-forest-canvas" aria-hidden="true"></canvas>
+
   <div id="saved-toast">saved.</div>
 
   <div id="wrapper">
@@ -1031,6 +472,10 @@
       <span class="footer-link" id="link-hyper">hyper.</span>
       <span class="footer-link" id="link-lights">lights on.</span>
       <span class="footer-link" id="link-sfx">sfx on.</span>
+      <span class="footer-link active-toggle" id="link-forest-visual" title="Toggle dark forest silhouette & falling leaves motion backdrop">
+        <span class="forest-dot live" id="footer-visual-dot"></span>
+        <span>forest visual.</span>
+      </span>
       <span class="footer-link" id="link-forest-audio" title="Open infinite forest soundscape mixer">
         <span class="forest-dot" id="footer-forest-dot"></span>
         <span>forest audio.</span>
@@ -3184,7 +2629,167 @@
         }
         renderAll();
       });
-    })();
-  </script>
-</body>
-</html>
+
+      // ========================================================================
+      // 4. HIGH-DPI (4K / RETINA) DARK & CREEPY NO-LIGHT FOREST MOTION CANVAS
+      //    Silhouetted gnarled trees, jagged bare branches, drifting ground
+      //    fog wisps, and tumbling withered dark leaves coupled to wind audio.
+      // ========================================================================
+      const CreepyForestVisual = (function () {
+        const canvas = $("creepy-forest-canvas");
+        const ctx = canvas.getContext("2d", { alpha: false });
+        let width = 0;
+        let height = 0;
+        let dpr = 1;
+        let enabled = true;
+        let treeLayers = [[], [], []]; // Back, Mid, Fore parallax silhouettes
+        let underbrush = [];
+        let fogWisps = [];
+        let leaves = [];
+        let lastFrameTime = performance.now();
+
+        // Deterministic seeded pseudo-random helper so tree silhouettes stay organic
+        function seededRand(seed) {
+          let x = Math.sin(seed * 9999.13) * 10000;
+          return x - Math.floor(x);
+        }
+
+        function buildGnarledTree(x, baseHeight, trunkWidth, seed, depthLayer) {
+          const segments = [];
+          const branches = [];
+          const steps = 7;
+          let curX = x;
+          let curY = 0;
+          const stepH = baseHeight / steps;
+
+          for (let i = 0; i < steps; i++) {
+            const lean = (seededRand(seed + i * 3.1) - 0.5) * (trunkWidth * 1.45);
+            const nextX = curX + lean;
+            const nextY = curY - stepH;
+            const wTop = trunkWidth * Math.pow(0.76, i + 1);
+            const wBot = trunkWidth * Math.pow(0.76, i);
+            segments.push({ x1: curX, y1: curY, x2: nextX, y2: nextY, wBot, wTop });
+
+            // Spawn crooked jagged branches on upper 65% of trunk
+            if (i >= 2) {
+              const branchCount = i === steps - 1 ? 3 : 2;
+              for (let b = 0; b < branchCount; b++) {
+                const dir = (b % 2 === 0 ? 1 : -1) * (seededRand(seed + i * 11 + b) > 0.2 ? 1 : -1);
+                const bLen = (baseHeight * (0.18 + seededRand(seed + i * 7 + b) * 0.24)) * (1 - i * 0.08);
+                const angle = -Math.PI / 2 + dir * (0.48 + seededRand(seed + i * 19 + b) * 0.65);
+                branches.push(buildCrookedBranch(nextX, nextY, angle, bLen, wTop * 0.58, seed + i * 31 + b, 3));
+              }
+            }
+            curX = nextX;
+            curY = nextY;
+          }
+
+          return {
+            x,
+            baseHeight,
+            trunkWidth,
+            segments,
+            branches,
+            swayPhase: seededRand(seed * 1.7) * Math.PI * 2,
+            swaySpeed: 0.35 + seededRand(seed * 2.3) * 0.35,
+            swayAmp: (0.004 + depthLayer * 0.0035)
+          };
+        }
+
+        function buildCrookedBranch(startX, startY, angle, length, thickness, seed, depth) {
+          const joints = [{ x: startX, y: startY, w: thickness }];
+          const subBranches = [];
+          let cx = startX;
+          let cy = startY;
+          let curAngle = angle;
+          const segs = 3;
+          const segLen = length / segs;
+
+          for (let s = 0; s < segs; s++) {
+            curAngle += (seededRand(seed + s * 5.7) - 0.5) * 0.55;
+            cx += Math.cos(curAngle) * segLen;
+            cy += Math.sin(curAngle) * segLen;
+            const w = Math.max(0.7, thickness * Math.pow(0.62, s + 1));
+            joints.push({ x: cx, y: cy, w });
+
+            if (depth > 1 && s >= 1) {
+              const twigAngle = curAngle + (seededRand(seed + s * 13.3) > 0.5 ? 0.55 : -0.55);
+              subBranches.push(
+                buildCrookedBranch(cx, cy, twigAngle, segLen * 0.85, w * 0.65, seed + s * 29, depth - 1)
+              );
+            }
+          }
+          return { joints, subBranches };
+        }
+
+        function rebuildForestScene() {
+          // Support up to true 4K sharpness (devicePixelRatio capped cleanly at 2.5 for smooth 60fps)
+          dpr = Math.min(window.devicePixelRatio || 1, 2.5);
+          width = window.innerWidth;
+          height = window.innerHeight;
+          canvas.width = Math.floor(width * dpr);
+          canvas.height = Math.floor(height * dpr);
+          ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+          // Generate 3 parallax layers of gnarled dark forest trees
+          treeLayers = [[], [], []];
+          const layerConfigs = [
+            { count: Math.max(12, Math.floor(width / 85)), hMin: 0.68, hMax: 0.94, wMin: 12, wMax: 22, seedOffset: 101 },
+            { count: Math.max(9, Math.floor(width / 120)), hMin: 0.74, hMax: 1.02, wMin: 18, wMax: 32, seedOffset: 409 },
+            { count: Math.max(5, Math.floor(width / 230)), hMin: 0.82, hMax: 1.12, wMin: 28, wMax: 48, seedOffset: 887 }
+          ];
+
+          layerConfigs.forEach((cfg, layerIdx) => {
+            for (let i = 0; i < cfg.count; i++) {
+              const spacing = (width + 180) / cfg.count;
+              const jitter = (seededRand(cfg.seedOffset + i * 4.7) - 0.5) * spacing * 0.75;
+              const tx = -90 + i * spacing + jitter;
+              const th = height * (cfg.hMin + seededRand(cfg.seedOffset + i * 9.3) * (cfg.hMax - cfg.hMin));
+              const tw = cfg.wMin + seededRand(cfg.seedOffset + i * 14.1) * (cfg.wMax - cfg.wMin);
+              treeLayers[layerIdx].push(buildGnarledTree(tx, th, tw, cfg.seedOffset + i * 17, layerIdx));
+            }
+          });
+
+          // Jagged forest floor brambles / dead roots
+          underbrush = [];
+          const bushCount = Math.max(24, Math.floor(width / 32));
+          for (let i = 0; i < bushCount; i++) {
+            underbrush.push({
+              x: (i / bushCount) * width + (seededRand(i * 3.3) - 0.5) * 40,
+              h: 18 + seededRand(i * 7.1) * 44,
+              w: 22 + seededRand(i * 11.9) * 48,
+              spike: (seededRand(i * 5.5) - 0.5) * 28
+            });
+          }
+
+          // Low creeping nocturnal mist wisps
+          fogWisps = [];
+          for (let i = 0; i < 9; i++) {
+            fogWisps.push({
+              x: Math.random() * width,
+              y: height * (0.62 + Math.random() * 0.36),
+              rx: 180 + Math.random() * 280,
+              ry: 28 + Math.random() * 48,
+              vx: (Math.random() > 0.5 ? 1 : -1) * (4 + Math.random() * 8),
+              alpha: 0.028 + Math.random() * 0.032
+            });
+          }
+
+          // Falling & tumbling withered leaves (scaled to viewport area)
+          const targetLeafCount = Math.min(115, Math.max(48, Math.floor((width * height) / 14500)));
+          if (leaves.length === 0) {
+            for (let i = 0; i < targetLeafCount; i++) {
+              leaves.push(createLeaf(true));
+            }
+          }
+        }
+
+        function createLeaf(randomY = false) {
+          // 3 depth tiers: 0 = distant tiny ash leaves, 1 = mid, 2 = close crisp dark silhouettes
+          const depthRoll = Math.random();
+          const tier = depthRoll < 0.45 ? 0 : depthRoll < 0.82 ? 1 : 2;
+          const baseSize = tier === 0 ? (3.2 + Math.random() * 2.4) : tier === 1 ? (5.5 + Math.random() * 3.5) : (9.0 + Math.random() * 5.0);
+          const shapes = ["pointed", "oak", "maple"];
+          // Dark withered palette: pitch charcoal, dead umber, ash grey, dried blood-umber
+          const darkColors = [
+            "#1
